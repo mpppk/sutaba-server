@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mpppk/cli-template/internal/option"
+	"github.com/mpppk/sutaba-server/internal/option"
 	"github.com/spf13/afero"
 
 	"github.com/mitchellh/go-homedir"
@@ -26,15 +26,15 @@ func newToggleFlag() *option.BoolFlag {
 
 func NewRootCmd(fs afero.Fs) (*cobra.Command, error) {
 	cmd := &cobra.Command{
-		Use:   "cli-template",
-		Short: "cli-template",
+		Use:   "sutaba-server",
+		Short: "sutaba-server",
 	}
 
 	configFlag := &option.StringFlag{
 		Flag: &option.Flag{
 			Name:         "config",
 			IsPersistent: true,
-			Usage:        "config file (default is $HOME/.cli-template.yaml)",
+			Usage:        "config file (default is $HOME/.sutaba-server.yaml)",
 		},
 	}
 
@@ -85,12 +85,28 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".cli-template" (without extension).
+		// Search config in home directory with name ".sutaba-server" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".cli-template")
+		viper.SetConfigName(".sutaba-server")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
+	if err := viper.BindEnv("TWITTER_CONSUMER_KEY"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("TWITTER_CONSUMER_SECRET"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("TWITTER_ACCESS_TOKEN"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("TWITTER_ACCESS_TOKEN_SECRET"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {

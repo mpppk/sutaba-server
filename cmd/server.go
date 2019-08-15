@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/mpppk/cli-template/internal/option"
+	"github.com/mpppk/sutaba-server/internal/option"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
@@ -16,7 +16,7 @@ import (
 )
 
 type CRCRequest struct {
-	CRCToken string `json:"crc_token"`
+	CRCToken string `json:"crc_token" query:"crc_token"`
 }
 
 type CRCResponse struct {
@@ -37,10 +37,13 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 			e := echo.New()
 			e.GET("/twitter/aaa", func(c echo.Context) error {
 				req := new(CRCRequest)
-				response := &CRCResponse{ResponseToken: CreateCRCToken(req.CRCToken, conf.ConsumerSecret)}
+				if err = c.Bind(req); err != nil {
+					return err
+				}
+				response := &CRCResponse{ResponseToken: CreateCRCToken(req.CRCToken, conf.TwitterConsumerSecret)}
 				return c.JSON(http.StatusOK, response)
 			})
-			port := "5000"
+			port := "1323"
 			envPort := os.Getenv("PORT")
 			if envPort != "" {
 				port = envPort

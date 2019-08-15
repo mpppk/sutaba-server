@@ -2,10 +2,10 @@ package option
 
 // ServerCmdConfig is config for server command
 type ServerCmdConfig struct {
-	ConsumerKey       string
-	ConsumerSecret    string
-	AccessToken       string
-	AccessTokenSecret string
+	TwitterConsumerKey       string `mapstructure:"TWITTER_CONSUMER_KEY"`
+	TwitterConsumerSecret    string `mapstructure:"TWITTER_CONSUMER_SECRET"`
+	TwitterAccessToken       string `mapstructure:"TWITTER_ACCESS_TOKEN"`
+	TwitterAccessTokenSecret string `mapstructure:"TWITTER_ACCESS_TOKEN_SECRET"`
 }
 
 // NewServerCmdConfigFromViper generate config for server command from viper

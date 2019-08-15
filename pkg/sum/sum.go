@@ -2,8 +2,9 @@
 package sum
 
 import (
-	"github.com/mpppk/cli-template/pkg/util"
 	"math"
+
+	"github.com/mpppk/sutaba-server/pkg/util"
 )
 
 // Sum returns sum of numbers

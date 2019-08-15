@@ -9,7 +9,7 @@ test:
 	go test ./...
 
 .PHONY: integration-test
-integration-test: deps
+integration-test:
 	go test -tags=integration ./...
 
 .PHONY: coverage
@@ -17,7 +17,7 @@ coverage:
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 .PHONY: codecov
-codecov:  coverage
+codecov: coverage
 	bash <(curl -s https://codecov.io/bash)
 
 .PHONY: build

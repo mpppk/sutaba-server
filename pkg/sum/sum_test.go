@@ -2,12 +2,13 @@ package sum_test
 
 import (
 	"fmt"
-	"github.com/mpppk/cli-template/pkg/sum"
-	"github.com/mpppk/cli-template/pkg/util"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/mpppk/sutaba-server/pkg/sum"
+	"github.com/mpppk/sutaba-server/pkg/util"
 )
 
 func ExampleSum() {
