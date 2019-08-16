@@ -1,0 +1,169 @@
+{
+  "for_user_id": "1354555700",
+  "tweet_create_events": [
+    {
+      "contributors": null,
+      "coordinates": null,
+      "created_at": "Fri Aug 16 02:59:00 +0000 2019",
+      "display_text_range": [
+        7,
+        10
+      ],
+      "entities": {
+        "urls": [],
+        "hashtags": [],
+        "url": {
+          "urls": null
+        },
+        "user_mentions": [
+          {
+            "name": "スタバなう警察",
+            "indices": [
+              0,
+              6
+            ],
+            "screen_name": "mpppk",
+            "id": 1354555700,
+            "id_str": "1354555700"
+          }
+        ],
+        "media": null
+      },
+      "extended_entities": {
+        "urls": null,
+        "hashtags": null,
+        "url": {
+          "urls": null
+        },
+        "user_mentions": null,
+        "media": null
+      },
+      "extended_tweet": {
+        "full_text": "",
+        "display_text_range": null,
+        "entities": {
+          "urls": null,
+          "hashtags": null,
+          "url": {
+            "urls": null
+          },
+          "user_mentions": null,
+          "media": null
+        },
+        "extended_entities": {
+          "urls": null,
+          "hashtags": null,
+          "url": {
+            "urls": null
+          },
+          "user_mentions": null,
+          "media": null
+        }
+      },
+      "favorite_count": 0,
+      "favorited": false,
+      "filter_level": "low",
+      "full_text": "@mpppk hey",
+      "has_extended_profile": false,
+      "id": 1162197037363806208,
+      "id_str": "1162197037363806208",
+      "in_reply_to_screen_name": "mpppk",
+      "in_reply_to_status_id": 1162186791673192450,
+      "in_reply_to_status_id_str": "1162186791673192450",
+      "in_reply_to_user_id": 1354555700,
+      "in_reply_to_user_id_str": "1354555700",
+      "is_translation_enabled": false,
+      "lang": "und",
+      "place": {
+        "attributes": null,
+        "bounding_box": {
+          "coordinates": null,
+          "type": ""
+        },
+        "contained_within": null,
+        "country": "",
+        "country_code": "",
+        "full_name": "",
+        "geometry": {
+          "coordinates": null,
+          "type": ""
+        },
+        "id": "",
+        "name": "",
+        "place_type": "",
+        "polylines": null,
+        "url": ""
+      },
+      "quoted_status_id": 0,
+      "quoted_status_id_str": "",
+      "quoted_status": null,
+      "possibly_sensitive": false,
+      "possibly_sensitive_appealable": false,
+      "retweet_count": 0,
+      "retweeted": false,
+      "retweeted_status": null,
+      "source": "\u003ca href=\"https://mobile.twitter.com\" rel=\"nofollow\"\u003eTwitter Web App\u003c/a\u003e",
+      "scopes": null,
+      "text": "@mpppk hey",
+      "user": {
+        "contributors_enabled": false,
+        "created_at": "Fri Aug 16 02:54:49 +0000 2019",
+        "default_profile": true,
+        "default_profile_image": false,
+        "description": "",
+        "email": "",
+        "entities": {
+          "urls": null,
+          "hashtags": null,
+          "url": {
+            "urls": null
+          },
+          "user_mentions": null,
+          "media": null
+        },
+        "favourites_count": 0,
+        "follow_request_sent": false,
+        "followers_count": 0,
+        "following": false,
+        "friends_count": 1,
+        "geo_enabled": false,
+        "has_extended_profile": false,
+        "id": 1162195935398547457,
+        "id_str": "1162195935398547457",
+        "is_translator": false,
+        "is_translation_enabled": false,
+        "lang": "",
+        "listed_count": 0,
+        "location": "",
+        "name": "スタバ警察",
+        "notifications": false,
+        "profile_background_color": "F5F8FA",
+        "profile_background_image_url": "",
+        "profile_background_image_url_https": "",
+        "profile_background_tile": false,
+        "profile_banner_url": "",
+        "profile_image_url": "http://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png",
+        "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png",
+        "profile_link_color": "1DA1F2",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "protected": false,
+        "screen_name": "sutaba_police",
+        "show_all_inline_media": false,
+        "status": null,
+        "statuses_count": 1,
+        "time_zone": "",
+        "url": "",
+        "utc_offset": 0,
+        "verified": false,
+        "withheld_in_countries": null,
+        "withheld_scope": ""
+      },
+      "withheld_copyright": false,
+      "withheld_in_countries": null,
+      "withheld_scope": ""
+    }
+  ]
+}
