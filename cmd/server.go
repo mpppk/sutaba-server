@@ -12,6 +12,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/mpppk/sutaba-server/pkg/twitter"
 
@@ -90,6 +91,11 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				}
 
 				tweet := tweets[0]
+
+				if tweet.InReplyToUserID != 1354555700 {
+					return c.NoContent(http.StatusNoContent)
+				}
+
 				entityMediaList := tweet.Entities.Media
 				if entityMediaList == nil || len(entityMediaList) == 0 {
 					return c.NoContent(http.StatusNoContent)
@@ -138,13 +144,66 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
-				var predictResponse ImagePredictResponse
-				if err := json.NewDecoder(resp.Body).Decode(&predictResponse); err != nil {
+				var predict ImagePredictResponse
+				if err := json.NewDecoder(resp.Body).Decode(&predict); err != nil {
 					log.Println(err)
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
-				log.Printf("predict: %#v\n", predictResponse)
+				log.Printf("predict: %#v\n", predict)
+
+				api := anaconda.NewTwitterApiWithCredentials(
+					conf.TwitterAccessToken,
+					conf.TwitterAccessTokenSecret,
+					conf.TwitterConsumerKey,
+					conf.TwitterConsumerSecret,
+				)
+
+				confidence, err := strconv.ParseFloat(predict.Confidence, 32)
+				if err != nil {
+					log.Println(err)
+					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
+				}
+
+				predStr := ""
+				switch predict.Pred {
+				case "sutaba":
+					if confidence > 0.8 {
+						predStr = "間違いなくスタバ"
+					} else if confidence > 0.5 {
+						predStr = "スタバ"
+					} else {
+						predStr = "たぶんスタバ"
+					}
+				case "ramen":
+					if confidence > 0.8 {
+						predStr = "どう見てもラーメン"
+					} else if confidence > 0.5 {
+						predStr = "ラーメン"
+					} else {
+						predStr = "ラーメン...?"
+					}
+				case "other":
+					if confidence > 0.8 {
+						predStr = "スタバではない"
+					} else if confidence > 0.5 {
+						predStr = "スタバとは言えない"
+					} else {
+						predStr = "なにこれ"
+					}
+				}
+
+				userName := tweet.User.ScreenName
+				tweetIdStr := tweet.IdStr
+				tweetText := fmt.Sprintf("判定:%s, 確信度:%.2f", predStr, confidence*100) + "%"
+				tweetText += " " + buildTweetUrl(userName, tweetIdStr)
+				postedTweet, err := api.PostTweet(tweetText, nil)
+				if err != nil {
+					log.Println(err)
+					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
+				}
+
+				log.Println(postedTweet)
 
 				if err = resp.Body.Close(); err != nil {
 					log.Println(err)
@@ -163,6 +222,10 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 		},
 	}
 	return cmd, nil
+}
+
+func buildTweetUrl(userName, id string) string {
+	return fmt.Sprintf("https://twitter.com/%s/status/%s", userName, id)
 }
 
 func CreateCRCToken(crcToken, consumerSecret string) string {
