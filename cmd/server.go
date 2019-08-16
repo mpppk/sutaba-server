@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/mpppk/sutaba-server/pkg/twitter"
 
@@ -98,6 +99,11 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 
 				entityMediaList := tweet.Entities.Media
 				if entityMediaList == nil || len(entityMediaList) == 0 {
+					return c.NoContent(http.StatusNoContent)
+				}
+
+				if !strings.Contains(tweet.Text, "スタバなう") {
+					fmt.Printf("tweet(%s) is ignored because text does not include 'スタバなう'", tweet.IdStr)
 					return c.NoContent(http.StatusNoContent)
 				}
 
