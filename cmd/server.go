@@ -102,7 +102,7 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				}
 
 				entityMedia := entityMediaList[0]
-				mediaBytes, err := twitter.DownloadEntityMedia(&entityMedia)
+				mediaBytes, err := twitter.DownloadEntityMedia(&entityMedia, 3, 1)
 				if err != nil {
 					log.Println(err)
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("failed to download media: %s", err))

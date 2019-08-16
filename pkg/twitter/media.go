@@ -1,16 +1,18 @@
 package twitter
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ChimeraCoder/anaconda"
 	"golang.org/x/xerrors"
 )
 
-func DownloadEntityMedia(entityMedia *anaconda.EntityMedia) ([]byte, error) {
+func DownloadEntityMedia(entityMedia *anaconda.EntityMedia, retryNum, retryInterval int) ([]byte, error) {
 	mediaRawUrl := entityMedia.Media_url_https
 	mediaUrl, err := url.Parse(mediaRawUrl)
 	if err != nil {
@@ -22,11 +24,21 @@ func DownloadEntityMedia(entityMedia *anaconda.EntityMedia) ([]byte, error) {
 		return nil, xerrors.Errorf("invalid mediaUrl: %s", mediaRawUrl)
 	}
 
-	bytes, err := DownloadFile(mediaRawUrl)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to download file to %s")
+	cnt := 0
+	for {
+		bytes, err := DownloadFile(mediaRawUrl)
+		if err != nil {
+			if cnt >= retryNum {
+				return nil, xerrors.Errorf("failed to download file from %s (retired %d times): %w", mediaRawUrl, retryNum, err)
+			}
+
+			fmt.Println(xerrors.Errorf("failed to download file from %s: %w", mediaRawUrl, err))
+			time.Sleep(time.Duration(retryInterval) * time.Second)
+			cnt++
+			continue
+		}
+		return bytes, nil
 	}
-	return bytes, nil
 }
 
 func DownloadFile(fileUrl string) (bytes []byte, err error) {
