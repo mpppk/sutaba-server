@@ -2,10 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/mpppk/sutaba-server/pkg/sutaba"
@@ -13,8 +10,6 @@ import (
 	"github.com/mpppk/sutaba-server/pkg/twitter"
 
 	"github.com/labstack/echo/v4/middleware"
-
-	"github.com/ChimeraCoder/anaconda"
 
 	"github.com/mpppk/sutaba-server/internal/option"
 
@@ -46,96 +41,7 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 			endpoint := "/twitter/aaa"
 			e.GET(endpoint, twitter.GenerateCRCTestHandler(conf.TwitterConsumerSecret))
 
-			e.POST(endpoint, func(c echo.Context) error {
-				events := new(twitter.TweetCreateEvents)
-				if err = c.Bind(events); err != nil {
-					return err
-				}
-				fmt.Printf("tweet_create_events received: %#v\n", events)
-				if !sutaba.IsTargetTweetCreateEvents(events, 1354555700, conf.TweetKeyword) {
-					return c.NoContent(http.StatusNoContent)
-				}
-				api := anaconda.NewTwitterApiWithCredentials(
-					conf.TwitterAccessToken,
-					conf.TwitterAccessTokenSecret,
-					conf.TwitterConsumerKey,
-					conf.TwitterConsumerSecret,
-				)
-				errTweetText := conf.ErrorMessage + fmt.Sprintf(" %v", time.Now())
-
-				tweet := &events.TweetCreateEvents[0]
-				entityMedia := tweet.Entities.Media[0]
-				mediaBytes, err := twitter.DownloadEntityMedia(&entityMedia, 3, 1)
-				if err != nil {
-					log.Println(err)
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("failed to download media: %s", err))
-				}
-				classifier := sutaba.NewClassifier("https://sutaba-lkui2qyzba-an.a.run.app")
-				predict, err := classifier.Predict(mediaBytes)
-				if err != nil {
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
-				log.Printf("predict: %#v\n", predict)
-
-				confidence, err := strconv.ParseFloat(predict.Confidence, 32)
-				if err != nil {
-					log.Println(err)
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
-
-				predStr := ""
-				switch predict.Pred {
-				case "sutaba":
-					if confidence > 0.8 {
-						predStr = "間違いなくスタバ"
-					} else if confidence > 0.5 {
-						predStr = "スタバ"
-					} else {
-						predStr = "たぶんスタバ"
-					}
-				case "ramen":
-					if confidence > 0.8 {
-						predStr = "どう見てもラーメン"
-					} else if confidence > 0.5 {
-						predStr = "ラーメン"
-					} else {
-						predStr = "ラーメン...?"
-					}
-				case "other":
-					if confidence > 0.8 {
-						predStr = "スタバではない"
-					} else if confidence > 0.5 {
-						predStr = "スタバとは言えない"
-					} else {
-						predStr = "なにこれ...スタバではない気がする"
-					}
-				}
-
-				userName := tweet.User.ScreenName
-				tweetIdStr := tweet.IdStr
-				tweetText := fmt.Sprintf("判定:%s\n確信度:%.2f", predStr, confidence*100) + "%"
-				tweetText += " " + twitter.BuildTweetUrl(userName, tweetIdStr)
-				postedTweet, err := api.PostTweet(tweetText, nil)
-				if err != nil {
-					log.Println(err)
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
-
-				log.Println("posted tweet:", postedTweet)
-				return c.NoContent(http.StatusNoContent)
-			})
+			e.POST(endpoint, sutaba.GeneratePredictHandler(conf))
 
 			port := "1323"
 			envPort := os.Getenv("PORT")
