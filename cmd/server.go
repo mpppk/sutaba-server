@@ -1,20 +1,14 @@
 package cmd
 
 import (
-	"bytes"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/mpppk/sutaba-server/pkg/sutaba"
 
 	"github.com/mpppk/sutaba-server/pkg/twitter"
 
@@ -29,24 +23,6 @@ import (
 
 	"github.com/spf13/cobra"
 )
-
-type CRCRequest struct {
-	CRCToken string `json:"crc_token" query:"crc_token"`
-}
-
-type CRCResponse struct {
-	ResponseToken string `json:"response_token"`
-}
-
-type ImagePredictResponse struct {
-	Pred       string `json:"pred"`
-	Confidence string `json:"confidence"`
-}
-
-type TweetCreateEvents struct {
-	ForUserId         string           `json:"for_user_id"`
-	TweetCreateEvents []anaconda.Tweet `json:"tweet_create_events"`
-}
 
 func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
 	fmt.Printf("Request Body: %v\n", string(reqBody))
@@ -68,46 +44,17 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 			e.Use(middleware.BodyDump(bodyDumpHandler))
 
 			endpoint := "/twitter/aaa"
-			e.GET(endpoint, func(c echo.Context) error {
-				req := new(CRCRequest)
-				if err = c.Bind(req); err != nil {
-					return err
-				}
-				response := &CRCResponse{ResponseToken: CreateCRCToken(req.CRCToken, conf.TwitterConsumerSecret)}
-				return c.JSON(http.StatusOK, response)
-			})
+			e.GET(endpoint, twitter.GenerateCRCTestHandler(conf.TwitterConsumerSecret))
 
 			e.POST(endpoint, func(c echo.Context) error {
-				events := new(TweetCreateEvents)
+				events := new(twitter.TweetCreateEvents)
 				if err = c.Bind(events); err != nil {
 					return err
 				}
 				fmt.Printf("tweet_create_events received: %#v\n", events)
-				if events.TweetCreateEvents == nil {
+				if !sutaba.IsTargetTweetCreateEvents(events, 1354555700, conf.TweetKeyword) {
 					return c.NoContent(http.StatusNoContent)
 				}
-
-				tweets := events.TweetCreateEvents
-				if len(tweets) == 0 {
-					return c.NoContent(http.StatusNoContent)
-				}
-
-				tweet := tweets[0]
-
-				if tweet.InReplyToUserID != 1354555700 {
-					return c.NoContent(http.StatusNoContent)
-				}
-
-				entityMediaList := tweet.Entities.Media
-				if entityMediaList == nil || len(entityMediaList) == 0 {
-					return c.NoContent(http.StatusNoContent)
-				}
-
-				if !strings.Contains(tweet.Text, conf.TweetKeyword) {
-					fmt.Printf("tweet(%s) is ignored because text does not include '%s'", tweet.IdStr, conf.TweetKeyword)
-					return c.NoContent(http.StatusNoContent)
-				}
-
 				api := anaconda.NewTwitterApiWithCredentials(
 					conf.TwitterAccessToken,
 					conf.TwitterAccessTokenSecret,
@@ -116,7 +63,8 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				)
 				errTweetText := conf.ErrorMessage + fmt.Sprintf(" %v", time.Now())
 
-				entityMedia := entityMediaList[0]
+				tweet := &events.TweetCreateEvents[0]
+				entityMedia := tweet.Entities.Media[0]
 				mediaBytes, err := twitter.DownloadEntityMedia(&entityMedia, 3, 1)
 				if err != nil {
 					log.Println(err)
@@ -125,61 +73,14 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("failed to download media: %s", err))
 				}
-				mediaBuffer := bytes.NewBuffer(mediaBytes)
-				// リクエストボディのデータを受け取るio.Writerを生成する。
-				body := &bytes.Buffer{}
-
-				// データのmultipartエンコーディングを管理するmultipart.Writerを生成する。
-				// ランダムなbase-16バウンダリが生成される。
-				mw := multipart.NewWriter(body)
-
-				// ファイルに使うパートを生成する。
-				// ヘッダ以外はデータは書き込まれない。
-				// fieldnameとfilenameの値がヘッダに含められる。
-				// ファイルデータを書き込むio.Writerが返却される。
-				fw, err := mw.CreateFormFile("file", "image")
-
-				// fwで作ったパートにファイルのデータを書き込む
-				if _, err = io.Copy(fw, mediaBuffer); err != nil {
-					log.Println(err)
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
-
-				// リクエストのContent-Typeヘッダに使う値を取得する（バウンダリを含む）
-				contentType := mw.FormDataContentType()
-
-				// 書き込みが終わったので最終のバウンダリを入れる
-				if err = mw.Close(); err != nil {
-					log.Println(err)
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
-
-				// contentTypeとbodyを使ってリクエストを送信する
-				url := "https://sutaba-lkui2qyzba-an.a.run.app/predict"
-				resp, err := http.Post(url, contentType, body)
+				classifier := sutaba.NewClassifier("https://sutaba-lkui2qyzba-an.a.run.app")
+				predict, err := classifier.Predict(mediaBytes)
 				if err != nil {
-					log.Println(err)
 					if _, err := api.PostTweet(errTweetText, nil); err != nil {
 						log.Println("failed to tweet error message", err)
 					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
-
-				var predict ImagePredictResponse
-				if err := json.NewDecoder(resp.Body).Decode(&predict); err != nil {
-					log.Println(err)
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
-
 				log.Printf("predict: %#v\n", predict)
 
 				confidence, err := strconv.ParseFloat(predict.Confidence, 32)
@@ -222,7 +123,7 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				userName := tweet.User.ScreenName
 				tweetIdStr := tweet.IdStr
 				tweetText := fmt.Sprintf("判定:%s\n確信度:%.2f", predStr, confidence*100) + "%"
-				tweetText += " " + buildTweetUrl(userName, tweetIdStr)
+				tweetText += " " + twitter.BuildTweetUrl(userName, tweetIdStr)
 				postedTweet, err := api.PostTweet(tweetText, nil)
 				if err != nil {
 					log.Println(err)
@@ -232,15 +133,7 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
-				log.Println(postedTweet)
-
-				if err = resp.Body.Close(); err != nil {
-					log.Println(err)
-					if _, err := api.PostTweet(errTweetText, nil); err != nil {
-						log.Println("failed to tweet error message", err)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
+				log.Println("posted tweet:", postedTweet)
 				return c.NoContent(http.StatusNoContent)
 			})
 
@@ -254,16 +147,6 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 		},
 	}
 	return cmd, nil
-}
-
-func buildTweetUrl(userName, id string) string {
-	return fmt.Sprintf("https://twitter.com/%s/status/%s", userName, id)
-}
-
-func CreateCRCToken(crcToken, consumerSecret string) string {
-	mac := hmac.New(sha256.New, []byte(consumerSecret))
-	mac.Write([]byte(crcToken))
-	return "sha256=" + base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
 func init() {
