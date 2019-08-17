@@ -32,6 +32,14 @@ type StringFlag struct {
 	IsFileName bool
 }
 
+// Int64Flag represents flag which can be specified as string
+type Int64Flag struct {
+	*Flag
+	Value      int64
+	IsDirName  bool
+	IsFileName bool
+}
+
 // BoolFlag represents flag which can be specified as bool
 type BoolFlag struct {
 	*Flag
@@ -56,6 +64,25 @@ func RegisterStringFlag(cmd *cobra.Command, flagConfig *StringFlag) error {
 	}
 
 	if err := markAttributes(cmd, flagConfig); err != nil {
+		return err
+	}
+
+	if err := viper.BindPFlag(flagConfig.getViperName(), flagSet.Lookup(flagConfig.Name)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// RegisterInt64Flag register int64 flag to provided cmd and viper
+func RegisterInt64Flag(cmd *cobra.Command, flagConfig *Int64Flag) error {
+	flagSet := getFlagSet(cmd, flagConfig.Flag)
+	if flagConfig.Shorthand == "" {
+		flagSet.Int64(flagConfig.Name, flagConfig.Value, flagConfig.Usage)
+	} else {
+		flagSet.Int64P(flagConfig.Name, flagConfig.Shorthand, flagConfig.Value, flagConfig.Usage)
+	}
+
+	if err := markAsRequired(cmd, flagConfig.Flag); err != nil {
 		return err
 	}
 

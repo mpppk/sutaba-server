@@ -64,6 +64,50 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 			return nil
 		},
 	}
+
+	errorMessageFlag := &option.StringFlag{
+		Flag: &option.Flag{
+			Name:      "error-message",
+			Usage:     "text of tweet for error notification",
+			ViperName: "ErrorMessage",
+		},
+	}
+	if err := option.RegisterStringFlag(cmd, errorMessageFlag); err != nil {
+		return nil, err
+	}
+
+	tweetKeywordFlag := &option.StringFlag{
+		Flag: &option.Flag{
+			Name:      "keyword",
+			Usage:     "process only tweets which contain this value",
+			ViperName: "TweetKeyword",
+		},
+	}
+	if err := option.RegisterStringFlag(cmd, tweetKeywordFlag); err != nil {
+		return nil, err
+	}
+
+	inReplyToUserIDFlag := &option.Int64Flag{
+		Flag: &option.Flag{
+			Name:      "reply-id",
+			Usage:     "process only tweets which reply to this user id",
+			ViperName: "InReplyToUserID",
+		},
+	}
+	if err := option.RegisterInt64Flag(cmd, inReplyToUserIDFlag); err != nil {
+		return nil, err
+	}
+
+	classifierServerHostFlag := &option.StringFlag{
+		Flag: &option.Flag{
+			Name:      "classifier-server",
+			Usage:     "classifier server url",
+			ViperName: "ClassifierServerHost",
+		},
+	}
+	if err := option.RegisterStringFlag(cmd, classifierServerHostFlag); err != nil {
+		return nil, err
+	}
 	return cmd, nil
 }
 
