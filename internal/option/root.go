@@ -20,9 +20,6 @@ func newCmdRawConfig() (*CmdRawConfig, error) {
 		return nil, xerrors.Errorf("failed to unmarshal config from viper: %w", err)
 	}
 
-	if err := conf.validate(); err != nil {
-		return nil, xerrors.Errorf("failed to create root cmd config: %w", err)
-	}
 	return &conf, nil
 }
 
@@ -34,13 +31,5 @@ func newCmdConfigFromRawConfig(rawConfig *CmdRawConfig) *CmdConfig {
 
 type CmdRawConfig struct {
 	ServerCmdConfig `mapstructure:",squash"`
-	SumCmdConfig    `mapstructure:",squash"`
 	Toggle          bool
-}
-
-func (c *CmdRawConfig) validate() error {
-	if err := c.SumCmdConfig.validate(); err != nil {
-		return xerrors.Errorf("invalid config parameter is given to SumCmdConfig: %w", err)
-	}
-	return nil
 }
