@@ -14,6 +14,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mpppk/sutaba-server/pkg/twitter"
 
@@ -81,7 +82,7 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				if err = c.Bind(events); err != nil {
 					return err
 				}
-				fmt.Printf("%#v\n", events)
+				fmt.Printf("tweet_create_events received: %#v\n", events)
 				if events.TweetCreateEvents == nil {
 					return c.NoContent(http.StatusNoContent)
 				}
@@ -107,10 +108,21 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					return c.NoContent(http.StatusNoContent)
 				}
 
+				api := anaconda.NewTwitterApiWithCredentials(
+					conf.TwitterAccessToken,
+					conf.TwitterAccessTokenSecret,
+					conf.TwitterConsumerKey,
+					conf.TwitterConsumerSecret,
+				)
+				errTweetText := fmt.Sprintf("@mpppk サーバ側でエラー発生したからなんとかして %v", time.Now())
+
 				entityMedia := entityMediaList[0]
 				mediaBytes, err := twitter.DownloadEntityMedia(&entityMedia, 3, 1)
 				if err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("failed to download media: %s", err))
 				}
 				mediaBuffer := bytes.NewBuffer(mediaBytes)
@@ -130,6 +142,9 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				// fwで作ったパートにファイルのデータを書き込む
 				if _, err = io.Copy(fw, mediaBuffer); err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
@@ -139,6 +154,9 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				// 書き込みが終わったので最終のバウンダリを入れる
 				if err = mw.Close(); err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
@@ -147,27 +165,29 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				resp, err := http.Post(url, contentType, body)
 				if err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
 				var predict ImagePredictResponse
 				if err := json.NewDecoder(resp.Body).Decode(&predict); err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
 				log.Printf("predict: %#v\n", predict)
 
-				api := anaconda.NewTwitterApiWithCredentials(
-					conf.TwitterAccessToken,
-					conf.TwitterAccessTokenSecret,
-					conf.TwitterConsumerKey,
-					conf.TwitterConsumerSecret,
-				)
-
 				confidence, err := strconv.ParseFloat(predict.Confidence, 32)
 				if err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
@@ -201,11 +221,14 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 
 				userName := tweet.User.ScreenName
 				tweetIdStr := tweet.IdStr
-				tweetText := fmt.Sprintf("判定:%s, 確信度:%.2f", predStr, confidence*100) + "%"
+				tweetText := fmt.Sprintf("判定:%s\n確信度:%.2f", predStr, confidence*100) + "%"
 				tweetText += " " + buildTweetUrl(userName, tweetIdStr)
 				postedTweet, err := api.PostTweet(tweetText, nil)
 				if err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 
@@ -213,6 +236,9 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 
 				if err = resp.Body.Close(); err != nil {
 					log.Println(err)
+					if _, err := api.PostTweet(errTweetText, nil); err != nil {
+						log.Println("failed to tweet error message", err)
+					}
 					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 				}
 				return c.NoContent(http.StatusNoContent)
@@ -241,5 +267,12 @@ func CreateCRCToken(crcToken, consumerSecret string) string {
 }
 
 func init() {
+	location := "Asia/Tokyo"
+	loc, err := time.LoadLocation(location)
+	if err != nil {
+		loc = time.FixedZone(location, 9*60*60)
+	}
+	time.Local = loc
+
 	cmdGenerators = append(cmdGenerators, newServerCmd)
 }
