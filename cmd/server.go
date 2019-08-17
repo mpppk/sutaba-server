@@ -103,8 +103,8 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					return c.NoContent(http.StatusNoContent)
 				}
 
-				if !strings.Contains(tweet.Text, "スタバなう") {
-					fmt.Printf("tweet(%s) is ignored because text does not include 'スタバなう'", tweet.IdStr)
+				if !strings.Contains(tweet.Text, conf.TweetKeyword) {
+					fmt.Printf("tweet(%s) is ignored because text does not include '%s'", tweet.IdStr, conf.TweetKeyword)
 					return c.NoContent(http.StatusNoContent)
 				}
 
@@ -114,7 +114,7 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					conf.TwitterConsumerKey,
 					conf.TwitterConsumerSecret,
 				)
-				errTweetText := fmt.Sprintf("@mpppk サーバ側でエラー発生したからなんとかして %v", time.Now())
+				errTweetText := conf.ErrorMessage + fmt.Sprintf(" %v", time.Now())
 
 				entityMedia := entityMediaList[0]
 				mediaBytes, err := twitter.DownloadEntityMedia(&entityMedia, 3, 1)
@@ -215,7 +215,7 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					} else if confidence > 0.5 {
 						predStr = "スタバとは言えない"
 					} else {
-						predStr = "なにこれ"
+						predStr = "なにこれ...スタバではない気がする"
 					}
 				}
 

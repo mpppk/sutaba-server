@@ -12,18 +12,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
-func newToggleFlag() *option.BoolFlag {
-	return &option.BoolFlag{
-		Flag: &option.Flag{
-			Name:  "toggle",
-			Usage: "Do nothing",
-		},
-		Value: false,
-	}
-}
-
 func NewRootCmd(fs afero.Fs) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "sutaba-server",
@@ -74,6 +62,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	cfgFile := viper.GetString("config")
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
