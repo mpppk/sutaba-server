@@ -1,7 +1,7 @@
 package option
 
-// ServerCmdConfig is config for server command
-type ServerCmdConfig struct {
+// StartCmdConfig is config for start command
+type StartCmdConfig struct {
 	TwitterConsumerKey       string `mapstructure:"TWITTER_CONSUMER_KEY"`
 	TwitterConsumerSecret    string `mapstructure:"TWITTER_CONSUMER_SECRET"`
 	TwitterAccessToken       string `mapstructure:"TWITTER_ACCESS_TOKEN"`
@@ -13,12 +13,12 @@ type ServerCmdConfig struct {
 	Port                     string `mapstructure:"PORT"`
 }
 
-// NewServerCmdConfigFromViper generate config for server command from viper
-func NewServerCmdConfigFromViper() (*ServerCmdConfig, error) {
+// NewStartCmdConfigFromViper generate config for start command from viper
+func NewStartCmdConfigFromViper() (*StartCmdConfig, error) {
 	rawConfig, err := newCmdRawConfig()
-	return newServerCmdConfigFromRawConfig(rawConfig), err
+	return newStartCmdConfigFromRawConfig(rawConfig), err
 }
 
-func newServerCmdConfigFromRawConfig(rawConfig *CmdRawConfig) *ServerCmdConfig {
-	return &(rawConfig.ServerCmdConfig)
+func newStartCmdConfigFromRawConfig(rawConfig *CmdRawConfig) *StartCmdConfig {
+	return &(rawConfig.StartCmdConfig)
 }

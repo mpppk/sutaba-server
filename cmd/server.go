@@ -25,13 +25,13 @@ func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
 	log.Printf("Response Body: %v\n", string(resBody))
 }
 
-func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
+func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 	cmd := &cobra.Command{
-		Use:   "server",
+		Use:   "start",
 		Short: "Start server",
 		Long:  ``,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			conf, err := option.NewServerCmdConfigFromViper()
+			conf, err := option.NewStartCmdConfigFromViper()
 			if err != nil {
 				return err
 			}
@@ -75,5 +75,5 @@ func init() {
 	}
 	time.Local = loc
 
-	cmdGenerators = append(cmdGenerators, newServerCmd)
+	cmdGenerators = append(cmdGenerators, newStartCmd)
 }

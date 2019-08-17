@@ -30,6 +30,6 @@ func newCmdConfigFromRawConfig(rawConfig *CmdRawConfig) *CmdConfig {
 }
 
 type CmdRawConfig struct {
-	ServerCmdConfig `mapstructure:",squash"`
-	Toggle          bool
+	StartCmdConfig `mapstructure:",squash"`
+	Toggle         bool
 }
