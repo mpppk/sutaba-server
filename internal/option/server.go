@@ -8,6 +8,9 @@ type ServerCmdConfig struct {
 	TwitterAccessTokenSecret string `mapstructure:"TWITTER_ACCESS_TOKEN_SECRET"`
 	ErrorMessage             string
 	TweetKeyword             string
+	InReplyToUserID          int64
+	ClassifierServerHost     string
+	Port                     string `mapstructure:"PORT"`
 }
 
 // NewServerCmdConfigFromViper generate config for server command from viper

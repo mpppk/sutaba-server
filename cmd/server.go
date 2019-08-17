@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"os"
 	"time"
 
 	"github.com/ChimeraCoder/anaconda"
@@ -44,8 +43,8 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 					conf.TwitterConsumerKey,
 					conf.TwitterConsumerSecret,
 				),
-				InReplyToUserID:      1354555700,
-				ClassifierServerHost: "https://sutaba-lkui2qyzba-an.a.run.app",
+				InReplyToUserID:      conf.InReplyToUserID,
+				ClassifierServerHost: conf.ClassifierServerHost,
 				TweetKeyword:         conf.TweetKeyword,
 				ErrorTweetMessage:    conf.ErrorMessage,
 			}
@@ -58,9 +57,8 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 			e.POST(endpoint, sutaba.GeneratePredictHandler(predictHandlerConfig))
 
 			port := "1323"
-			envPort := os.Getenv("PORT")
-			if envPort != "" {
-				port = envPort
+			if conf.Port != "" {
+				port = conf.Port
 			}
 			e.Logger.Fatal(e.Start(":" + port))
 			return nil
