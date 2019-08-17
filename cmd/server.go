@@ -1,9 +1,11 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"time"
+
+	"github.com/ChimeraCoder/anaconda"
 
 	"github.com/mpppk/sutaba-server/pkg/sutaba"
 
@@ -20,8 +22,8 @@ import (
 )
 
 func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
-	fmt.Printf("Request Body: %v\n", string(reqBody))
-	fmt.Printf("Response Body: %v\n", string(resBody))
+	log.Printf("Request Body: %v\n", string(reqBody))
+	log.Printf("Response Body: %v\n", string(resBody))
 }
 
 func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
@@ -35,13 +37,25 @@ func newServerCmd(fs afero.Fs) (*cobra.Command, error) {
 				return err
 			}
 
+			predictHandlerConfig := &sutaba.PredictHandlerConfig{
+				TwitterClient: anaconda.NewTwitterApiWithCredentials(
+					conf.TwitterAccessToken,
+					conf.TwitterAccessTokenSecret,
+					conf.TwitterConsumerKey,
+					conf.TwitterConsumerSecret,
+				),
+				InReplyToUserID:      1354555700,
+				ClassifierServerHost: "https://sutaba-lkui2qyzba-an.a.run.app",
+				TweetKeyword:         conf.TweetKeyword,
+				ErrorTweetMessage:    conf.ErrorMessage,
+			}
+
 			e := echo.New()
 			e.Use(middleware.BodyDump(bodyDumpHandler))
 
 			endpoint := "/twitter/aaa"
 			e.GET(endpoint, twitter.GenerateCRCTestHandler(conf.TwitterConsumerSecret))
-
-			e.POST(endpoint, sutaba.GeneratePredictHandler(conf))
+			e.POST(endpoint, sutaba.GeneratePredictHandler(predictHandlerConfig))
 
 			port := "1323"
 			envPort := os.Getenv("PORT")
