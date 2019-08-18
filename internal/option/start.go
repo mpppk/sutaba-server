@@ -2,15 +2,18 @@ package option
 
 // StartCmdConfig is config for start command
 type StartCmdConfig struct {
-	TwitterConsumerKey       string `mapstructure:"TWITTER_CONSUMER_KEY"`
-	TwitterConsumerSecret    string `mapstructure:"TWITTER_CONSUMER_SECRET"`
-	TwitterAccessToken       string `mapstructure:"TWITTER_ACCESS_TOKEN"`
-	TwitterAccessTokenSecret string `mapstructure:"TWITTER_ACCESS_TOKEN_SECRET"`
-	ErrorMessage             string
-	TweetKeyword             string
-	InReplyToUserID          int64
-	ClassifierServerHost     string
-	Port                     string `mapstructure:"PORT"`
+	TwitterConsumerKey            string `mapstructure:"TWITTER_CONSUMER_KEY"`
+	TwitterConsumerSecret         string `mapstructure:"TWITTER_CONSUMER_SECRET"`
+	OwnerTwitterAccessToken       string `mapstructure:"OWNER_TWITTER_ACCESS_TOKEN"`
+	OwnerTwitterAccessTokenSecret string `mapstructure:"OWNER_TWITTER_ACCESS_TOKEN_SECRET"`
+	BotTwitterAccessToken         string `mapstructure:"BOT_TWITTER_ACCESS_TOKEN"`
+	BotTwitterAccessTokenSecret   string `mapstructure:"BOT_TWITTER_ACCESS_TOKEN_SECRET"`
+	ErrorTweetMessage             string
+	TweetKeyword                  string
+	OwnerTwitterUserID            int64
+	BotTwitterUserID              int64
+	ClassifierServerHost          string
+	Port                          string `mapstructure:"PORT"`
 }
 
 // NewStartCmdConfigFromViper generate config for start command from viper

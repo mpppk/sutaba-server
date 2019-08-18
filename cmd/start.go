@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"time"
 
-	"github.com/ChimeraCoder/anaconda"
+	"github.com/spf13/viper"
 
 	"github.com/mpppk/sutaba-server/pkg/sutaba"
 
@@ -37,16 +39,30 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 			}
 
 			predictHandlerConfig := &sutaba.PredictHandlerConfig{
-				TwitterClient: anaconda.NewTwitterApiWithCredentials(
-					conf.TwitterAccessToken,
-					conf.TwitterAccessTokenSecret,
-					conf.TwitterConsumerKey,
-					conf.TwitterConsumerSecret,
-				),
-				InReplyToUserID:      conf.InReplyToUserID,
+				Users: []*twitter.User{
+					twitter.NewUser(
+						conf.OwnerTwitterAccessToken,
+						conf.OwnerTwitterAccessTokenSecret,
+						conf.TwitterConsumerKey,
+						conf.TwitterConsumerSecret,
+						conf.OwnerTwitterUserID,
+						conf.TweetKeyword,
+						true,
+						twitter.Reply,
+					),
+					twitter.NewUser(
+						conf.BotTwitterAccessToken,
+						conf.BotTwitterAccessTokenSecret,
+						conf.TwitterConsumerKey,
+						conf.TwitterConsumerSecret,
+						conf.BotTwitterUserID,
+						conf.TweetKeyword,
+						true,
+						twitter.QuoteTweet,
+					),
+				},
 				ClassifierServerHost: conf.ClassifierServerHost,
-				TweetKeyword:         conf.TweetKeyword,
-				ErrorTweetMessage:    conf.ErrorMessage,
+				ErrorTweetMessage:    conf.ErrorTweetMessage,
 			}
 
 			e := echo.New()
@@ -91,7 +107,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 		Flag: &option.Flag{
 			Name:      "reply-id",
 			Usage:     "process only tweets which reply to this user id",
-			ViperName: "InReplyToUserID",
+			ViperName: "OwnerTwitterUserID",
 		},
 	}
 	if err := option.RegisterInt64Flag(cmd, inReplyToUserIDFlag); err != nil {
@@ -107,6 +123,30 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 	}
 	if err := option.RegisterStringFlag(cmd, classifierServerHostFlag); err != nil {
 		return nil, err
+	}
+	if err := viper.BindEnv("TWITTER_CONSUMER_KEY"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("TWITTER_CONSUMER_SECRET"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("OWNER_TWITTER_ACCESS_TOKEN"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("OWNER_TWITTER_ACCESS_TOKEN_SECRET"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("BOT_TWITTER_ACCESS_TOKEN"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if err := viper.BindEnv("BOT_TWITTER_ACCESS_TOKEN_SECRET"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 	return cmd, nil
 }

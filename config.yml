@@ -1,4 +1,5 @@
-ErrorMessage: "@mpppk サーバ側でエラー発生したからなんとかして"
+ErrorTweetMessage: "@mpppk サーバ側でエラー発生したからなんとかして"
 TweetKeyword: "スタバなう"
-InReplyToUserID: 1354555700
+OwnerTwitterUserID: 1354555700
+BotTwitterUserID: 1162195935398547457
 ClassifierServerHost: "https://sutaba-lkui2qyzba-an.a.run.app"
