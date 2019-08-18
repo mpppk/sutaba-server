@@ -15,4 +15,5 @@ RUN mkdir /lib64
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 RUN ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 COPY --from=builder /src/sutaba-server /usr/local/bin
-ENTRYPOINT ["/usr/local/bin/sutaba-server", "start", "--config", "./config.yml"]
+COPY --from=builder /src/config.yml /etc
+ENTRYPOINT ["/usr/local/bin/sutaba-server", "start", "--config", "/etc/config.yml"]

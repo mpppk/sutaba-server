@@ -124,6 +124,10 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 	if err := option.RegisterStringFlag(cmd, classifierServerHostFlag); err != nil {
 		return nil, err
 	}
+	if err := viper.BindEnv("PORT"); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	if err := viper.BindEnv("TWITTER_CONSUMER_KEY"); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
