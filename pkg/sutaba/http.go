@@ -13,14 +13,15 @@ import (
 )
 
 type PredictHandlerConfig struct {
-	Users                []*twitter.User
+	SendUser             *twitter.User
+	SubscribeUsers       []*twitter.User
 	ClassifierServerHost string
 	ErrorTweetMessage    string
 }
 
-func postPredictTweet(events *twitter.TweetCreateEvents, user *twitter.User, classifierServerHost string) (*anaconda.Tweet, error) {
-	if ok, reason := isTargetTweetCreateEvents(events, user.ID, user.TargetKeyword); !ok {
-		log.Printf("tweet does not be predicted. reason: %s user: %#v\n", reason, user)
+func postPredictTweet(events *twitter.TweetCreateEvents, sendUser, subscribeUser *twitter.User, classifierServerHost string) (*anaconda.Tweet, error) {
+	if ok, reason := isTargetTweetCreateEvents(events, subscribeUser.ID, subscribeUser.TargetKeyword); !ok {
+		log.Printf("tweet does not be predicted. reason: %s subscribeUser: %#v\n", reason, subscribeUser)
 		return nil, nil
 	}
 	tweet := &events.TweetCreateEvents[0]
@@ -41,7 +42,7 @@ func postPredictTweet(events *twitter.TweetCreateEvents, user *twitter.User, cla
 		return nil, err
 	}
 
-	postedTweet, err := user.PostByTweetType(tweetText, tweet)
+	postedTweet, err := sendUser.PostByTweetType(tweetText, tweet)
 	if err != nil {
 		return nil, err
 	}
@@ -55,12 +56,12 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 			return err
 		}
 		log.Printf("twitter event received: %#v\n", events)
-		for _, user := range conf.Users {
-			postedTweet, err := postPredictTweet(events, user, conf.ClassifierServerHost)
+		for _, subscribeUser := range conf.SubscribeUsers {
+			postedTweet, err := postPredictTweet(events, conf.SendUser, subscribeUser, conf.ClassifierServerHost)
 			if err != nil {
 				errTweetText := conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-				if user.IsErrorReporter {
-					user.LogAndPostErrorTweet(errTweetText, err)
+				if subscribeUser.IsErrorReporter {
+					subscribeUser.LogAndPostErrorTweet(errTweetText, err)
 				}
 				return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 			}

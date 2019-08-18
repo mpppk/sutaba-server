@@ -38,29 +38,29 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				return err
 			}
 
+			ownerUser := twitter.NewUser(
+				conf.OwnerTwitterAccessToken,
+				conf.OwnerTwitterAccessTokenSecret,
+				conf.TwitterConsumerKey,
+				conf.TwitterConsumerSecret,
+				conf.OwnerTwitterUserID,
+				conf.TweetKeyword,
+				true,
+				twitter.ReplyWithQuote,
+			)
+			botUser := twitter.NewUser(
+				conf.BotTwitterAccessToken,
+				conf.BotTwitterAccessTokenSecret,
+				conf.TwitterConsumerKey,
+				conf.TwitterConsumerSecret,
+				conf.BotTwitterUserID,
+				conf.TweetKeyword,
+				true,
+				twitter.ReplyWithQuote,
+			)
 			predictHandlerConfig := &sutaba.PredictHandlerConfig{
-				Users: []*twitter.User{
-					twitter.NewUser(
-						conf.OwnerTwitterAccessToken,
-						conf.OwnerTwitterAccessTokenSecret,
-						conf.TwitterConsumerKey,
-						conf.TwitterConsumerSecret,
-						conf.OwnerTwitterUserID,
-						conf.TweetKeyword,
-						true,
-						twitter.ReplyWithQuote,
-					),
-					twitter.NewUser(
-						conf.BotTwitterAccessToken,
-						conf.BotTwitterAccessTokenSecret,
-						conf.TwitterConsumerKey,
-						conf.TwitterConsumerSecret,
-						conf.BotTwitterUserID,
-						conf.TweetKeyword,
-						true,
-						twitter.QuoteTweet,
-					),
-				},
+				SendUser:             botUser,
+				SubscribeUsers:       []*twitter.User{ownerUser, botUser},
 				ClassifierServerHost: conf.ClassifierServerHost,
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
 			}
