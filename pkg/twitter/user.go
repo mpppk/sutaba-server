@@ -1,6 +1,7 @@
 package twitter
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/ChimeraCoder/anaconda"
@@ -12,6 +13,7 @@ const (
 	Tweet TweetType = iota + 1
 	Reply
 	QuoteTweet
+	ReplyWithQuote
 )
 
 type User struct {
@@ -37,6 +39,32 @@ func NewUser(
 		IsErrorReporter: isErrorReporter,
 		TweetType:       tweetType,
 	}
+}
+
+func (u *User) PostByTweetType(text string, tweet *anaconda.Tweet) (anaconda.Tweet, error) {
+	switch u.TweetType {
+	case Tweet:
+		return u.Client.PostTweet(text, nil)
+	case Reply:
+		return u.PostReply(text, tweet.User.ScreenName, tweet.IdStr)
+	case QuoteTweet:
+		return u.PostQuoteTweet(text, tweet)
+	case ReplyWithQuote:
+		return u.PostReplyWithQuote(text, tweet, tweet.User.ScreenName, tweet.IdStr)
+	}
+	return anaconda.Tweet{}, fmt.Errorf("unknown TweetType: %v", u.TweetType)
+}
+
+func (u *User) PostQuoteTweet(text string, quoteTweet *anaconda.Tweet) (anaconda.Tweet, error) {
+	return PostQuoteTweet(u.Client, text, quoteTweet)
+}
+
+func (u *User) PostReply(text, toScreenName, toTweetIDStr string) (anaconda.Tweet, error) {
+	return PostReply(u.Client, text, toScreenName, toTweetIDStr)
+}
+
+func (u *User) PostReplyWithQuote(text string, quoteTweet *anaconda.Tweet, toScreenName, toTweetIDStr string) (anaconda.Tweet, error) {
+	return PostReplyWithQuote(u.Client, text, quoteTweet, toScreenName, toTweetIDStr)
 }
 
 func (u *User) LogAndPostErrorTweet(text string, err error) {

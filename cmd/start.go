@@ -48,7 +48,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 						conf.OwnerTwitterUserID,
 						conf.TweetKeyword,
 						true,
-						twitter.Reply,
+						twitter.ReplyWithQuote,
 					),
 					twitter.NewUser(
 						conf.BotTwitterAccessToken,

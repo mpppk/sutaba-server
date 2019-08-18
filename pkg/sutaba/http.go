@@ -41,7 +41,7 @@ func postPredictTweet(events *twitter.TweetCreateEvents, user *twitter.User, cla
 		return nil, err
 	}
 
-	postedTweet, err := twitter.PostQuoteTweet(user.Client, tweetText, tweet)
+	postedTweet, err := user.PostByTweetType(tweetText, tweet)
 	if err != nil {
 		return nil, err
 	}
