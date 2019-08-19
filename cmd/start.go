@@ -65,6 +65,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				SubscribeUsers:       []*twitter.User{ownerUser, botUser},
 				ClassifierServerHost: conf.ClassifierServerHost,
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
+				SorryTweetMessage:    conf.SorryTweetMessage,
 			}
 
 			e := echo.New()

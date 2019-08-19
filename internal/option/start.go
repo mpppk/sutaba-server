@@ -9,6 +9,7 @@ type StartCmdConfig struct {
 	BotTwitterAccessToken         string `mapstructure:"BOT_TWITTER_ACCESS_TOKEN"`
 	BotTwitterAccessTokenSecret   string `mapstructure:"BOT_TWITTER_ACCESS_TOKEN_SECRET"`
 	ErrorTweetMessage             string
+	SorryTweetMessage             string
 	TweetKeyword                  string
 	OwnerTwitterUserID            int64
 	BotTwitterUserID              int64

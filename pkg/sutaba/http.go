@@ -18,6 +18,7 @@ type PredictHandlerConfig struct {
 	SubscribeUsers       []*twitter.User
 	ClassifierServerHost string
 	ErrorTweetMessage    string
+	SorryTweetMessage    string
 }
 
 func postPredictTweet(events *twitter.TweetCreateEvents, sendUser, subscribeUser *twitter.User, classifierServerHost string) (*anaconda.Tweet, error) {
@@ -64,7 +65,7 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 				errTweetText := conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
 				if subscribeUser.IsErrorReporter {
 					tweet := &events.TweetCreateEvents[0]
-					subscribeUser.PostErrorTweet(errTweetText, "sorry", tweet.User.ScreenName, tweet.IdStr)
+					subscribeUser.PostErrorTweet(errTweetText, conf.SorryTweetMessage, tweet.User.ScreenName, tweet.IdStr)
 				}
 				return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 			}
