@@ -2,9 +2,9 @@ package twitter
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/mpppk/sutaba-server/pkg/util"
 )
 
 type TweetType int
@@ -67,9 +67,11 @@ func (u *User) PostReplyWithQuote(text string, quoteTweet *anaconda.Tweet, toScr
 	return PostReplyWithQuote(u.Client, text, quoteTweet, toScreenName, toTweetIDStr)
 }
 
-func (u *User) LogAndPostErrorTweet(text string, err error) {
-	log.Println(err)
-	if _, err := u.Client.PostTweet(text, nil); err != nil {
-		log.Println("failed to tweet error message", err)
+func (u *User) PostErrorTweet(notifyText, sorryText, toSorryUserScreenName, toSorryTweetIDStr string) {
+	if _, err := u.Client.PostTweet(notifyText, nil); err != nil {
+		util.LogPrintlnInOneLine("failed to tweet error notify message", err)
+	}
+	if _, err := u.PostReply(sorryText, toSorryUserScreenName, toSorryTweetIDStr); err != nil {
+		util.LogPrintlnInOneLine("failed to tweet sorry message", err)
 	}
 }

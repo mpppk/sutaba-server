@@ -2,9 +2,10 @@ package sutaba
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/mpppk/sutaba-server/pkg/util"
 
 	"github.com/ChimeraCoder/anaconda"
 
@@ -20,8 +21,8 @@ type PredictHandlerConfig struct {
 }
 
 func postPredictTweet(events *twitter.TweetCreateEvents, sendUser, subscribeUser *twitter.User, classifierServerHost string) (*anaconda.Tweet, error) {
-	if ok, reason := isTargetTweetCreateEvents(events, subscribeUser.ID, subscribeUser.TargetKeyword); !ok {
-		log.Printf("tweet does not be predicted. reason: %s subscribeUser: %#v\n", reason, subscribeUser)
+	if ok, reason := isTargetTweetCreateEvents(events, sendUser.ID, subscribeUser.ID, subscribeUser.TargetKeyword); !ok {
+		util.LogPrintfInOneLine("tweet does not be predicted. reason: %s subscribeUser: %#v\n", reason, subscribeUser)
 		return nil, nil
 	}
 	tweet := &events.TweetCreateEvents[0]
@@ -55,17 +56,19 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 		if err := c.Bind(events); err != nil {
 			return err
 		}
-		log.Printf("twitter event received: %#v\n", events)
+		util.LogPrintfInOneLine("twitter event received: %#v\n", events)
 		for _, subscribeUser := range conf.SubscribeUsers {
 			postedTweet, err := postPredictTweet(events, conf.SendUser, subscribeUser, conf.ClassifierServerHost)
 			if err != nil {
+				util.LogPrintlnInOneLine("error occurred:", err)
 				errTweetText := conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
 				if subscribeUser.IsErrorReporter {
-					subscribeUser.LogAndPostErrorTweet(errTweetText, err)
+					tweet := &events.TweetCreateEvents[0]
+					subscribeUser.PostErrorTweet(errTweetText, "sorry", tweet.User.ScreenName, tweet.IdStr)
 				}
 				return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
 			}
-			log.Println("posted tweet:", postedTweet)
+			util.LogPrintlnInOneLine("posted tweet:", postedTweet)
 		}
 		return c.NoContent(http.StatusNoContent)
 	}

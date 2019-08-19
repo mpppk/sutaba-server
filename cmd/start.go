@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/mpppk/sutaba-server/pkg/util"
 
 	"github.com/spf13/viper"
 
@@ -24,8 +25,8 @@ import (
 )
 
 func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
-	log.Printf("Request Body: %v\n", strings.Replace(string(reqBody), "\n", " ", -1))
-	log.Printf("Response Body: %v\n", strings.Replace(string(resBody), "\n", " ", -1))
+	util.LogPrintfInOneLine("Request Body: %v\n", strings.Replace(string(reqBody), "\n", " ", -1))
+	util.LogPrintfInOneLine("Response Body: %v\n", strings.Replace(string(resBody), "\n", " ", -1))
 }
 
 func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
