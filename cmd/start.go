@@ -88,10 +88,21 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 		Flag: &option.Flag{
 			Name:      "error-message",
 			Usage:     "text of tweet for error notification",
-			ViperName: "ErrorMessage",
+			ViperName: "ErrorTweetMessage",
 		},
 	}
 	if err := option.RegisterStringFlag(cmd, errorMessageFlag); err != nil {
+		return nil, err
+	}
+
+	sorryMessageFlag := &option.StringFlag{
+		Flag: &option.Flag{
+			Name:      "sorry-message",
+			Usage:     "text of tweet to send to user if process is failed",
+			ViperName: "SorryTweetMessage",
+		},
+	}
+	if err := option.RegisterStringFlag(cmd, sorryMessageFlag); err != nil {
 		return nil, err
 	}
 
@@ -106,14 +117,25 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	inReplyToUserIDFlag := &option.Int64Flag{
+	ownerId := &option.Int64Flag{
 		Flag: &option.Flag{
-			Name:      "reply-id",
-			Usage:     "process only tweets which reply to this user id",
+			Name:      "owner-id",
+			Usage:     "owner twitter user id (error tweet will be send to owner if something is failed)",
 			ViperName: "OwnerTwitterUserID",
 		},
 	}
-	if err := option.RegisterInt64Flag(cmd, inReplyToUserIDFlag); err != nil {
+	if err := option.RegisterInt64Flag(cmd, ownerId); err != nil {
+		return nil, err
+	}
+
+	botId := &option.Int64Flag{
+		Flag: &option.Flag{
+			Name:      "bot-id",
+			Usage:     "bot twitter user id",
+			ViperName: "OwnerTwitterUserID",
+		},
+	}
+	if err := option.RegisterInt64Flag(cmd, botId); err != nil {
 		return nil, err
 	}
 
