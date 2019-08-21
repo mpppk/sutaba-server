@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/classifier"
+
 	"github.com/mpppk/sutaba-server/pkg/util"
 
 	"github.com/ChimeraCoder/anaconda"
@@ -33,8 +35,8 @@ func postPredictTweet(events *twitter.TweetCreateEvents, sendUser, subscribeUser
 		return nil, err
 	}
 
-	classifier := NewClassifier(classifierServerHost)
-	predict, err := classifier.Predict(mediaBytes)
+	classifierClient := classifier.NewClassifier(classifierServerHost)
+	predict, err := classifierClient.Predict(mediaBytes)
 	if err != nil {
 		return nil, err
 	}
