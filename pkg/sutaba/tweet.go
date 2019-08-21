@@ -6,10 +6,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/classifier"
+
 	"golang.org/x/xerrors"
 )
 
-func PredToText(predict *ImagePredictResponse) (string, error) {
+func PredToText(predict *classifier.ImagePredictResponse) (string, error) {
 	conf, err := strconv.ParseFloat(predict.Confidence, 32)
 	if err != nil {
 		return "", xerrors.Errorf("failed to parse confidence(%s) to float: %w", predict.Confidence)

@@ -6,11 +6,6 @@ import (
 	"github.com/mpppk/sutaba-server/pkg/twitter"
 )
 
-type ImagePredictResponse struct {
-	Pred       string `json:"pred"`
-	Confidence string `json:"confidence"`
-}
-
 func isTargetTweetCreateEvents(events *twitter.TweetCreateEvents, ignoreUserId int64, toUserId int64, keyword string) (bool, string) {
 	if events.TweetCreateEvents == nil {
 		return false, "event is not tweet_create_events"

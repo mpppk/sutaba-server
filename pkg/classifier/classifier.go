@@ -8,8 +8,6 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/mpppk/sutaba-server/pkg/sutaba"
-
 	"golang.org/x/xerrors"
 )
 
@@ -23,7 +21,12 @@ func NewClassifier(host string) *Classifier {
 	}
 }
 
-func (c *Classifier) Predict(imageBytes []byte) (*sutaba.ImagePredictResponse, error) {
+type ImagePredictResponse struct {
+	Pred       string `json:"pred"`
+	Confidence string `json:"confidence"`
+}
+
+func (c *Classifier) Predict(imageBytes []byte) (*ImagePredictResponse, error) {
 	body, contentType, err := generateMultipartFormBody(imageBytes)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create multipart form: %w", err)
@@ -34,7 +37,7 @@ func (c *Classifier) Predict(imageBytes []byte) (*sutaba.ImagePredictResponse, e
 		return nil, xerrors.Errorf("failed to http post to predict endpoint(%s): %w", url, err)
 	}
 
-	var predict sutaba.ImagePredictResponse
+	var predict ImagePredictResponse
 	if err := json.NewDecoder(resp.Body).Decode(&predict); err != nil {
 		remainBody, e := ioutil.ReadAll(resp.Body)
 		remainBodyStr := ""
