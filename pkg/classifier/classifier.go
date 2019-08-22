@@ -38,14 +38,11 @@ func (c *Classifier) Predict(imageBytes []byte) (*ImagePredictResponse, error) {
 	}
 
 	var predict ImagePredictResponse
-	if err := json.NewDecoder(resp.Body).Decode(&predict); err != nil {
-		remainBody, e := ioutil.ReadAll(resp.Body)
-		remainBodyStr := ""
-		if e == nil {
-			remainBodyStr = string(remainBody)
-		}
-		return nil, xerrors.Errorf("failed to decode response(%s) of classifier server: %w", remainBodyStr, err)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err := json.Unmarshal(bodyBytes, &predict); err != nil {
+		return nil, xerrors.Errorf("failed to decode response(%s) of classifier server: %w", string(bodyBytes), err)
 	}
+
 	if err = resp.Body.Close(); err != nil {
 		return nil, xerrors.Errorf("failed to close predict response body: %w", err)
 	}
