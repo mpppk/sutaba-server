@@ -84,37 +84,39 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 		},
 	}
 
-	errorMessageFlag := &option.StringFlag{
-		Flag: &option.Flag{
-			Name:      "error-message",
-			Usage:     "text of tweet for error notification",
-			ViperName: "ErrorTweetMessage",
+	stringFlags := []*option.StringFlag{
+		{
+			Flag: &option.Flag{
+				Name:      "error-message",
+				Usage:     "text of tweet for error notification",
+				ViperName: "ERROR_TWEET_MESSAGE",
+			},
+		}, {
+			Flag: &option.Flag{
+				Name:      "sorry-message",
+				Usage:     "text of tweet to send to user if process is failed",
+				ViperName: "SORRY_TWEET_MESSAGE",
+			},
+		},
+		{
+			Flag: &option.Flag{
+				Name:      "keyword",
+				Usage:     "process only tweets which contain this value",
+				ViperName: "TWEET_KEYWORD",
+			},
+		},
+		{
+			Flag: &option.Flag{
+				Name:      "classifier-server",
+				Usage:     "classifier server url",
+				ViperName: "CLASSIFIER_SERVER_HOST",
+			},
 		},
 	}
-	if err := option.RegisterStringFlag(cmd, errorMessageFlag); err != nil {
-		return nil, err
-	}
-
-	sorryMessageFlag := &option.StringFlag{
-		Flag: &option.Flag{
-			Name:      "sorry-message",
-			Usage:     "text of tweet to send to user if process is failed",
-			ViperName: "SorryTweetMessage",
-		},
-	}
-	if err := option.RegisterStringFlag(cmd, sorryMessageFlag); err != nil {
-		return nil, err
-	}
-
-	tweetKeywordFlag := &option.StringFlag{
-		Flag: &option.Flag{
-			Name:      "keyword",
-			Usage:     "process only tweets which contain this value",
-			ViperName: "TweetKeyword",
-		},
-	}
-	if err := option.RegisterStringFlag(cmd, tweetKeywordFlag); err != nil {
-		return nil, err
+	for _, flag := range stringFlags {
+		if err := option.RegisterStringFlag(cmd, flag); err != nil {
+			return nil, err
+		}
 	}
 
 	ownerId := &option.Int64Flag{
@@ -139,44 +141,22 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	classifierServerHostFlag := &option.StringFlag{
-		Flag: &option.Flag{
-			Name:      "classifier-server",
-			Usage:     "classifier server url",
-			ViperName: "ClassifierServerHost",
-		},
+	envStrs := []string{
+		"PORT", "ERROR_TWEET_MESSAGE", "SORRY_TWEET_MESSAGE",
+		"CLASSIFIER_SERVER_HOST",
+		"TWEET_KEYWORD", "OWNER_TWITTER_USER_ID", "BOT_TWITTER_USER_ID",
+		"TWITTER_CONSUMER_KEY", "TWITTER_CONSUMER_SECRET",
+		"OWNER_TWITTER_ACCESS_TOKEN", "OWNER_TWITTER_ACCESS_TOKEN_SECRET",
+		"BOT_TWITTER_ACCESS_TOKEN", "BOT_TWITTER_ACCESS_TOKEN_SECRET",
 	}
-	if err := option.RegisterStringFlag(cmd, classifierServerHostFlag); err != nil {
-		return nil, err
+
+	for _, envStr := range envStrs {
+		if err := viper.BindEnv(envStr); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
-	if err := viper.BindEnv("PORT"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	if err := viper.BindEnv("TWITTER_CONSUMER_KEY"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	if err := viper.BindEnv("TWITTER_CONSUMER_SECRET"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	if err := viper.BindEnv("OWNER_TWITTER_ACCESS_TOKEN"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	if err := viper.BindEnv("OWNER_TWITTER_ACCESS_TOKEN_SECRET"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	if err := viper.BindEnv("BOT_TWITTER_ACCESS_TOKEN"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	if err := viper.BindEnv("BOT_TWITTER_ACCESS_TOKEN_SECRET"); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+
 	return cmd, nil
 }
 

@@ -6,6 +6,7 @@ services:
       - "1323:5000"
     environment:
       PORT: 5000
+      CLASSIFIER_SERVER_HOST: https://classifier-server-lkui2qyzba-an.a.run.app
       TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
       TWITTER_CONSUMER_SECRET: ${TWITTER_CONSUMER_SECRET}
       OWNER_TWITTER_ACCESS_TOKEN: ${OWNER_TWITTER_ACCESS_TOKEN}
@@ -18,6 +19,7 @@ services:
       - "1323:5000"
     environment:
       PORT: 5000
+      CLASSIFIER_SERVER_HOST: https://classifier-server-lkui2qyzba-an.a.run.app
       TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
       TWITTER_CONSUMER_SECRET: ${TWITTER_CONSUMER_SECRET}
       OWNER_TWITTER_ACCESS_TOKEN: ${OWNER_TWITTER_ACCESS_TOKEN}
