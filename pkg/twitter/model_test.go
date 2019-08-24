@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/google/go-cmp/cmp"
 )
 
+var testDir = "../../testdata/aaa"
+
 func TestAccountActivityEvents(t *testing.T) {
-	testDir := "../../testdata/aaa"
 	tests := []struct {
 		name     string
 		fileName string
@@ -359,5 +359,163 @@ func generateTweetEventTestFunc(filePath string, want *AccountActivityEvent) fun
 		if diff := cmp.Diff(aae, *want); diff != "" {
 			t.Errorf("AccountActivityEvent differs: (-got +want)\n%s", diff)
 		}
+	}
+}
+
+func TestAccountActivityEvent_GetApps(t *testing.T) {
+	tests := []struct {
+		name     string
+		fileName string
+		want     Apps
+		wantErr  bool
+	}{
+		{
+			name:     "direct_message_events",
+			fileName: "direct_message_events.json",
+			want: Apps{
+				SourceApp: &SourceApp{
+					Id:   "13090192",
+					Name: "FuriousCamperTestApp1",
+					URL:  "https://twitter.com/furiouscamper",
+				},
+				Sender: &AppUser{
+					Id:                   "3001969357",
+					CreatedTimestamp:     "1422556069340",
+					Name:                 "Jordan Brinks",
+					ScreenName:           "furiouscamper",
+					Location:             "Boulder, CO",
+					Description:          "Alter Ego - Twitter PE opinions-are-my-own",
+					URL:                  "https://t.co/SnxaA15ZuY",
+					Protected:            false,
+					Verified:             false,
+					FollowersCount:       22,
+					FriendsCount:         45,
+					StatusesCount:        494,
+					ProfileImageURL:      "null",
+					ProfileImageURLHTTPS: "https://pbs.twimg.com/profile_images/851526626785480705/cW4WTi7C_normal.jpg",
+				},
+				Recipient: &AppUser{
+					Id:                   "4337869213",
+					CreatedTimestamp:     "1448312972328",
+					Name:                 "Harrison Test",
+					ScreenName:           "Harris_0ff",
+					Location:             "Burlington, MA",
+					Protected:            false,
+					Verified:             false,
+					FollowersCount:       8,
+					FriendsCount:         8,
+					ProfileImageURL:      "null",
+					StatusesCount:        240,
+					ProfileImageURLHTTPS: "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filePath := filepath.Join(testDir, tt.fileName)
+			contents, err := ioutil.ReadFile(filePath)
+			if err != nil {
+				t.Fatalf("failed to read test file from %s", filePath)
+			}
+
+			var aae AccountActivityEvent
+			if err := json.Unmarshal(contents, &aae); err != nil {
+				t.Fatalf("failed to unmarshal tweet_create_events: %s", contents)
+			}
+
+			got, err := aae.GetApps()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AccountActivityEvent.GetApps() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := cmp.Diff(got, &tt.want); diff != "" {
+				t.Errorf("AccountActivityEvent.Apps differs: (-got +want)\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestAccountActivityEvent_GetUsers(t *testing.T) {
+	tests := []struct {
+		name     string
+		fileName string
+		want     []*AppUser
+		wantErr  bool
+	}{
+		{
+			name:     "direct_message_indicate_typing_events",
+			fileName: "direct_message_indicate_typing_events.json",
+			want: []*AppUser{
+				{
+					Id:                   "3001969357",
+					CreatedTimestamp:     "1422556069340",
+					Name:                 "Jordan Brinks",
+					ScreenName:           "furiouscamper",
+					Location:             "Boulder, CO",
+					Description:          "Alter Ego - Twitter PE opinions-are-my-own",
+					URL:                  "https://t.co/SnxaA15ZuY",
+					Protected:            false,
+					Verified:             false,
+					FollowersCount:       23,
+					FriendsCount:         47,
+					StatusesCount:        509,
+					ProfileImageURL:      "null",
+					ProfileImageURLHTTPS: "https://pbs.twimg.com/profile_images/851526626785480705/cW4WTi7C_normal.jpg",
+				},
+				{
+					Id:                   "3284025577",
+					CreatedTimestamp:     "1437281176085",
+					Name:                 "Bogus Bogart",
+					ScreenName:           "bogusbogart",
+					Protected:            true,
+					Verified:             false,
+					FollowersCount:       1,
+					FriendsCount:         4,
+					StatusesCount:        35,
+					ProfileImageURL:      "null",
+					ProfileImageURLHTTPS: "https://pbs.twimg.com/profile_images/763383202857779200/ndvZ96mE_normal.jpg",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filePath := filepath.Join(testDir, tt.fileName)
+			contents, err := ioutil.ReadFile(filePath)
+			if err != nil {
+				t.Fatalf("failed to read test file from %s", filePath)
+			}
+
+			var aae AccountActivityEvent
+			if err := json.Unmarshal(contents, &aae); err != nil {
+				t.Fatalf("failed to unmarshal tweet_create_events: %s", contents)
+			}
+
+			gotUsers, err := aae.GetUsers()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AccountActivityEvent.GetUsers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			compare := func(gotUser *AppUser, wantUsers []*AppUser) {
+				for _, wantUser := range wantUsers {
+					if gotUser.Id == wantUser.Id {
+						if diff := cmp.Diff(gotUser, wantUser); diff != "" {
+							t.Errorf("AccountActivityEvent.Users differs: (-got +want)\n%s", diff)
+						}
+						return
+					}
+				}
+				t.Errorf("gotUser not found: expected: %#v", gotUser)
+			}
+
+			for _, gotUser := range gotUsers {
+				compare(gotUser, tt.want)
+			}
+
+		})
 	}
 }

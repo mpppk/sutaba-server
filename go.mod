@@ -13,6 +13,7 @@ require (
 	github.com/google/go-cmp v0.3.1
 	github.com/labstack/echo/v4 v4.1.9
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/rhysd/go-github-selfupdate v1.1.0
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v0.0.5
