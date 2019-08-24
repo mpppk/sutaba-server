@@ -23,7 +23,7 @@ type PredictHandlerConfig struct {
 	SorryTweetMessage    string
 }
 
-func postPredictTweet(events *twitter.TweetCreateEvents, sendUser, subscribeUser *twitter.User, classifierServerHost string) (*anaconda.Tweet, error) {
+func postPredictTweet(events *twitter.AccountActivityEvent, sendUser, subscribeUser *twitter.User, classifierServerHost string) (*anaconda.Tweet, error) {
 	if ok, reason := isTargetTweetCreateEvents(events, sendUser.ID, subscribeUser.ID, subscribeUser.TargetKeyword); !ok {
 		util.LogPrintfInOneLine("tweet does not be predicted. reason: %s subscribeUser: %#v\n", reason, subscribeUser)
 		return nil, nil
@@ -55,7 +55,7 @@ func postPredictTweet(events *twitter.TweetCreateEvents, sendUser, subscribeUser
 
 func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) error {
 	return func(c echo.Context) error {
-		events := new(twitter.TweetCreateEvents)
+		events := new(twitter.AccountActivityEvent)
 		if err := c.Bind(events); err != nil {
 			return err
 		}
