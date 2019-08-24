@@ -1,0 +1,15 @@
+{
+  "for_user_id": "2244994945",
+  "follow_events": [
+    {
+      "type": "unfollow",
+      "created_timestamp": "1517588749178",
+      "target": {
+        "id": 1
+      },
+      "source": {
+        "id": 2
+      }
+    }
+  ]
+}

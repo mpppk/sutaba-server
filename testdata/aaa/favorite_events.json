@@ -1,0 +1,14 @@
+{
+  "for_user_id": "2244994945",
+  "favorite_events": [{
+    "id": "a7ba59eab0bfcba386f7acedac279542",
+    "created_at": "Mon Mar 26 16:33:26 +0000 2018",
+    "timestamp_ms": 1522082006140,
+    "favorited_status": {
+      "id": 1
+    },
+    "user": {
+      "id": 2
+    }
+  }]
+}
