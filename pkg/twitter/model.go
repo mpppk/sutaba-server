@@ -8,6 +8,21 @@ import (
 	"golang.org/x/xerrors"
 )
 
+type EventName string
+
+const (
+	TweetCreateEventsEventName                 EventName = "tweet_create_events"
+	FavoriteEventsEventName                    EventName = "favorite_events"
+	FollowEventsEventName                      EventName = "follow_events"
+	BlockEventsEventName                       EventName = "block_events"
+	MuteEventsEventName                        EventName = "mute_events"
+	UserEventEventName                         EventName = "user_event"
+	DirectMessageEventsEventName               EventName = "direct_message_events"
+	DirectMessageIndicateTypingEventsEventName EventName = "direct_message_indicate_typing_events"
+	DirectMessageMarkReadEventsEventName       EventName = "direct_message_mark_read_events"
+	TweetDeleteEventsEventName                 EventName = "tweet_delete_events"
+)
+
 type EventType string
 
 const (
@@ -153,6 +168,49 @@ type AccountActivityEvent struct {
 	TweetDeleteEvents                 []*TweetDeleteEvent                 `json:"tweet_delete_events"`
 	Apps                              map[string]interface{}
 	Users                             map[string]interface{}
+}
+
+func (a *AccountActivityEvent) GetEventName() EventName {
+	if a.TweetCreateEvents != nil {
+		return TweetCreateEventsEventName
+	}
+
+	if a.FavoriteEvents != nil {
+		return FavoriteEventsEventName
+	}
+
+	if a.FollowEvents != nil {
+		return FollowEventsEventName
+	}
+
+	if a.BlockEvents != nil {
+		return BlockEventsEventName
+	}
+
+	if a.MuteEvents != nil {
+		return MuteEventsEventName
+	}
+
+	if a.UserEvent != nil {
+		return UserEventEventName
+	}
+
+	if a.DirectMessageEvents != nil {
+		return DirectMessageEventsEventName
+	}
+
+	if a.DirectMessageIndicateTypingEvents != nil {
+		return DirectMessageIndicateTypingEventsEventName
+	}
+
+	if a.DirectMessageMarkReadEvents != nil {
+		return DirectMessageMarkReadEventsEventName
+	}
+
+	if a.TweetDeleteEvents != nil {
+		return TweetDeleteEventsEventName
+	}
+	return ""
 }
 
 func (a *AccountActivityEvent) GetApps() (*Apps, error) {

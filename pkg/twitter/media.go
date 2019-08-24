@@ -41,6 +41,22 @@ func DownloadEntityMedia(entityMedia *anaconda.EntityMedia, retryNum, retryInter
 	}
 }
 
+func getMedia(tweet *anaconda.Tweet) (*anaconda.EntityMedia, bool) {
+	entityMediaList := tweet.Entities.Media
+	if entityMediaList == nil || len(entityMediaList) == 0 {
+		return nil, false
+	}
+	return &entityMediaList[0], true
+}
+
+func DownloadEntityMediaFromTweet(tweet *anaconda.Tweet, retryNum, retryInterval int) ([]byte, error) {
+	media, ok := getMedia(tweet)
+	if !ok {
+		return nil, xerrors.Errorf("tweet(id: %d) has no media", tweet.Id)
+	}
+	return DownloadEntityMedia(media, retryNum, retryInterval)
+}
+
 func DownloadFile(fileUrl string) (bytes []byte, err error) {
 	response, err := http.Get(fileUrl)
 	if err != nil {
