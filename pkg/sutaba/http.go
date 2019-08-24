@@ -1,6 +1,7 @@
 package sutaba
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -30,7 +31,12 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 		if err := c.Bind(events); err != nil {
 			return err
 		}
-		util.LogPrintfInOneLine("twitter event received: %#v\n", events)
+
+		if eventJson, err := json.Marshal(events); err == nil {
+			util.LogPrintfInOneLine("twitter event received: %s\n", string(eventJson))
+		} else {
+			util.LogPrintfInOneLine("twitter event received: %#v\n", events)
+		}
 
 		if events.GetEventName() != twitter.TweetCreateEventsEventName {
 			return c.NoContent(http.StatusNoContent)
