@@ -104,6 +104,44 @@ type TweetDeleteEvent struct {
 	TimestampMs string `json:"timestamp_ms"`
 }
 
+type SourceApp struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+type Sender struct {
+	ID                   string `json:"id"`
+	CreatedTimestamp     string `json:"created_timestamp"`
+	Name                 string `json:"name"`
+	ScreenName           string `json:"screen_name"`
+	Location             string `json:"location"`
+	Description          string `json:"description"`
+	URL                  string `json:"url"`
+	Protected            bool   `json:"protected"`
+	Verified             bool   `json:"verified"`
+	FollowersCount       int    `json:"followers_count"`
+	FriendsCount         int    `json:"friends_count"`
+	StatusesCount        int    `json:"statuses_count"`
+	ProfileImageURL      string `json:"profile_image_url"`
+	ProfileImageURLHTTPS string `json:"profile_image_url_https"`
+}
+
+type Recipient struct {
+	Id                   string `json:"id"`
+	CreatedTimestamp     string `json:"created_timestamp"`
+	Name                 string `json:"name"`
+	ScreenName           string `json:"screen_name"`
+	Location             string `json:"location"`
+	Protected            bool   `json:"protected"`
+	Verified             bool   `json:"verified"`
+	FollowersCount       int    `json:"followers_count"`
+	FriendsCount         int    `json:"friends_count"`
+	ProfileImageURL      string `json:"profile_image_url"`
+	StatusesCount        int    `json:"statuses_count"`
+	ProfileImageURLHTTPS string `json:"profile_image_url_https"`
+}
+
 type AccountActivityEvent struct {
 	ForUserId                         string                              `json:"for_user_id"`
 	TweetCreateEvents                 []*anaconda.Tweet                   `json:"tweet_create_events"`
@@ -116,4 +154,6 @@ type AccountActivityEvent struct {
 	DirectMessageIndicateTypingEvents []*DirectMessageIndicateTypingEvent `json:"direct_message_indicate_typing_events"`
 	DirectMessageMarkReadEvents       []*DirectMessageMarkReadEvent       `json:"direct_message_mark_read_events"`
 	TweetDeleteEvents                 []*TweetDeleteEvent                 `json:"tweet_delete_events"`
+	Apps                              interface{}
+	Users                             interface{}
 }

@@ -165,7 +165,7 @@ func TestAccountActivityEvents(t *testing.T) {
 						CreatedTimestamp: "1516403560557",
 						MessageCreate: &MessageCreate{
 							Target: struct {
-								RecipientID string `json:"recipient_id"`
+								RecipientId string `json:"recipient_id"`
 							}{"4337869213"},
 							SenderId:    "3001969357",
 							SourceAppId: "13090192",
@@ -181,6 +181,44 @@ func TestAccountActivityEvents(t *testing.T) {
 						},
 					},
 				},
+				Apps: map[string]interface{}{
+					"13090192": map[string]interface{}{
+						"id":   "13090192",
+						"name": "FuriousCamperTestApp1",
+						"url":  "https://twitter.com/furiouscamper",
+					},
+					"3001969357": map[string]interface{}{
+						"created_timestamp":       "1422556069340",
+						"description":             "Alter Ego - Twitter PE opinions-are-my-own",
+						"followers_count":         float64(22),
+						"friends_count":           float64(45),
+						"id":                      "3001969357",
+						"location":                "Boulder, CO",
+						"name":                    "Jordan Brinks",
+						"profile_image_url":       "null",
+						"profile_image_url_https": "https://pbs.twimg.com/profile_images/851526626785480705/cW4WTi7C_normal.jpg",
+						"protected":               false,
+						"screen_name":             "furiouscamper",
+						"statuses_count":          float64(494),
+						"url":                     "https://t.co/SnxaA15ZuY",
+						"verified":                false,
+					},
+					"4337869213": map[string]interface{}{
+						"created_timestamp":       "1448312972328",
+						"followers_count":         float64(8),
+						"friends_count":           float64(8),
+						"id":                      "4337869213",
+						"location":                "Burlington, MA",
+						"name":                    "Harrison Test",
+						"profile_image_url":       "null",
+						"profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png",
+						"protected":               false,
+						"screen_name":             "Harris_0ff",
+						"statuses_count":          float64(240),
+						"verified":                false,
+					},
+					"users": map[string]interface{}{},
+				},
 			},
 		},
 		{
@@ -193,12 +231,42 @@ func TestAccountActivityEvents(t *testing.T) {
 						CreatedTimestamp: "1518127183443",
 						SenderId:         "3284025577",
 						Target: struct {
-							RecipientID string `json:"recipient_id"`
+							RecipientId string `json:"recipient_id"`
 						}{"3001969357"},
 					},
 				},
+				Users: map[string]interface{}{
+					"3001969357": map[string]interface{}{
+						"created_timestamp":       "1422556069340",
+						"description":             "Alter Ego - Twitter PE opinions-are-my-own",
+						"followers_count":         float64(23),
+						"friends_count":           float64(47),
+						"id":                      "3001969357",
+						"location":                "Boulder, CO",
+						"name":                    "Jordan Brinks",
+						"profile_image_url":       "null",
+						"profile_image_url_https": "https://pbs.twimg.com/profile_images/851526626785480705/cW4WTi7C_normal.jpg",
+						"protected":               false,
+						"screen_name":             "furiouscamper",
+						"statuses_count":          float64(509),
+						"url":                     "https://t.co/SnxaA15ZuY",
+						"verified":                false,
+					},
+					"3284025577": map[string]interface{}{
+						"created_timestamp":       "1437281176085",
+						"followers_count":         float64(1),
+						"friends_count":           float64(4),
+						"id":                      "3284025577",
+						"name":                    "Bogus Bogart",
+						"profile_image_url":       "null",
+						"profile_image_url_https": "https://pbs.twimg.com/profile_images/763383202857779200/ndvZ96mE_normal.jpg",
+						"protected":               true,
+						"screen_name":             "bogusbogart",
+						"statuses_count":          float64(35),
+						"verified":                false,
+					},
+				},
 			},
-			// TODO
 		},
 		{
 			name:     "direct_message_mark_read_events",
@@ -210,9 +278,42 @@ func TestAccountActivityEvents(t *testing.T) {
 						CreatedTimestamp: "1518452444662",
 						SenderId:         "199566737",
 						Target: struct {
-							RecipientID string `json:"recipient_id"`
+							RecipientId string `json:"recipient_id"`
 						}{"3001969357"},
 						LastReadEventId: "963085315333238788",
+					},
+				},
+				Users: map[string]interface{}{
+					"199566737": map[string]interface{}{
+						"created_timestamp":       "1286429788000",
+						"description":             "data by day @twitter, design by dusk",
+						"followers_count":         float64(299),
+						"friends_count":           float64(336),
+						"id":                      "199566737",
+						"location":                "Denver, CO",
+						"name":                    "Le Braat",
+						"profile_image_url":       "null",
+						"profile_image_url_https": "https://pbs.twimg.com/profile_images/936652894371119105/YHEozVAg_normal.jpg",
+						"protected":               false,
+						"screen_name":             "LeBraat",
+						"statuses_count":          float64(752),
+						"verified":                false,
+					},
+					"3001969357": map[string]interface{}{
+						"created_timestamp":       "1422556069340",
+						"description":             "Alter Ego - Twitter PE opinions-are-my-own",
+						"followers_count":         float64(23),
+						"friends_count":           float64(48),
+						"id":                      "3001969357",
+						"location":                "Boulder, CO",
+						"name":                    "Jordan Brinks",
+						"profile_image_url":       "null",
+						"profile_image_url_https": "https://pbs.twimg.com/profile_images/851526626785480705/cW4WTi7C_normal.jpg",
+						"protected":               false,
+						"screen_name":             "furiouscamper",
+						"statuses_count":          float64(510),
+						"url":                     "https://t.co/SnxaA15ZuY",
+						"verified":                false,
 					},
 				},
 			},
@@ -225,11 +326,11 @@ func TestAccountActivityEvents(t *testing.T) {
 				TweetDeleteEvents: []*TweetDeleteEvent{
 					{
 						Status: struct {
-							ID     string `json:"id"`
-							UserID string `json:"user_id"`
+							Id     string `json:"id"`
+							UserId string `json:"user_id"`
 						}{
-							ID:     "1045405559317569537",
-							UserID: "930524282358325248",
+							Id:     "1045405559317569537",
+							UserId: "930524282358325248",
 						},
 						TimestampMs: "1432228155593",
 					},
@@ -252,7 +353,7 @@ func generateTweetEventTestFunc(filePath string, want *AccountActivityEvent) fun
 
 		var aae AccountActivityEvent
 		if err := json.Unmarshal(contents, &aae); err != nil {
-			t.Fatalf("failed to unmarshal tweet_create_events: %s", string(contents))
+			t.Fatalf("failed to unmarshal tweet_create_events: %s", contents)
 		}
 
 		if diff := cmp.Diff(aae, *want); diff != "" {

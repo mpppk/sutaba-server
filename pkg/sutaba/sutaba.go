@@ -19,11 +19,11 @@ func isTargetTweetCreateEvents(events *twitter.AccountActivityEvent, ignoreUserI
 	tweet := tweets[0]
 
 	if tweet.User.Id == ignoreUserId {
-		return false, "tweet is sent by ignore user ID"
+		return false, "tweet is sent by ignore user Id"
 	}
 
 	if tweet.InReplyToUserID != toUserId {
-		return false, "tweet is not target user ID"
+		return false, "tweet is not target user Id"
 	}
 
 	entityMediaList := tweet.Entities.Media
