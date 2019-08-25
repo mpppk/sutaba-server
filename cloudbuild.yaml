@@ -2,7 +2,6 @@ steps:
   # Install make command
   - name: 'gcr.io/cloud-builders/go:debian'
     id: &install-build-essential 'install-build-essential'
-    env: [&gomodule_mode 'GO111MODULE=on', &gopath 'GOPATH=/go']
     entrypoint: 'bash'
     args:
       - '-c'
@@ -13,7 +12,7 @@ steps:
   # Download go modules
   - name: 'gcr.io/cloud-builders/go'
     id: &go-mod-download-id 'go-mod-download'
-    env: [*gomodule_mode, *gopath]
+    env: [&gomodule_mode 'GO111MODULE=on', &gopath 'GOPATH=/go']
     args: ['mod', 'download']
     waitFor: ['-']
     volumes:
@@ -33,7 +32,7 @@ steps:
   - name: 'gcr.io/cloud-builders/go:debian'
     env: [*gomodule_mode, *gopath]
     entrypoint: './make'
-    args: ['lint']
+    args: ['test']
     waitFor: [*go-mod-download-id, *install-build-essential]
     volumes: [*go-modules-volume]
 
