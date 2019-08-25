@@ -61,13 +61,13 @@ steps:
   # Deploy to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
-    env: ['REPO_NAME=$REPO_NAME']
+    env: ['REPO_NAME=$REPO_NAME', 'PROJECT_ID=$PROJECT_ID', 'BRANCH_NAME=$BRANCH_NAME']
     args:
       - '-c'
       - |
         if [ $BRANCH_NAME = "add_cloud_build_settings" ]; then
           gcloud beta run deploy sutaba-staging-server \
-          --image asia.gcr.io/sutaba/$REPO_NAME:master \
+          --image asia.gcr.io/$PROJECT_ID/$REPO_NAME:$BRANCH_NAME \
           --platform managed \
           --region asia-northeast1 \
           --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app
