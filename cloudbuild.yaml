@@ -70,5 +70,6 @@ steps:
           --image asia.gcr.io/$PROJECT_ID/$REPO_NAME:$BRANCH_NAME \
           --platform managed \
           --region asia-northeast1 \
-          --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app
+          --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app \
+          --vergosity debug
         fi
