@@ -26,8 +26,8 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     waitFor: ['docker-pull']
     args: [ 'build',
-            '-t', 'asia.gcr.io/$PROJECT_ID/sutaba-server', '.',
-            '--cache-from', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME',
+            '-t', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME', '.',
+            '--cache-from', 'asia.gcr.io/$PROJECT_ID/sutaba-server:master',
     ]
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME']
