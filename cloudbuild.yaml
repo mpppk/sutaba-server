@@ -1,5 +1,5 @@
 steps:
-  - name: 'gcr.io/cloud-builders/go'
+  - name: 'gcr.io/cloud-builders/go:debian'
     env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
     entrypoint: 'bash'
     args:
@@ -7,7 +7,7 @@ steps:
       - |
         apt-get install build-essential && make lint
     waitFor: ['-']
-  - name: 'gcr.io/cloud-builders/go'
+  - name: 'gcr.io/cloud-builders/go:debian'
     env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
     entrypoint: 'bash'
     args:
