@@ -36,23 +36,24 @@ steps:
     args:
       - '-c'
       - |
-        docker pull asia.gcr.io/$PROJECT_ID/sutaba-server:master || exit 0
+        docker pull asia.gcr.io/$PROJECT_ID/$REPO_NAME:master || exit 0
   - name: 'gcr.io/cloud-builders/docker'
     waitFor: ['docker-pull']
     args: [ 'build',
-            '-t', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME', '.',
-            '--cache-from', 'asia.gcr.io/$PROJECT_ID/sutaba-server:master',
+            '-t', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:$BRANCH_NAME', '.',
+            '--cache-from', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:master',
     ]
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME']
+    args: ['push', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:$BRANCH_NAME']
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
+    env: ['REPO_NAME=$REPO_NAME']
     args:
       - '-c'
       - |
         if [ $BRANCH_NAME = "master" ]; then
           gcloud beta run deploy sutaba-staging-server \
-          --image asia.gcr.io/sutaba/sutaba-server:master \
+          --image asia.gcr.io/sutaba/$REPO_NAME:master \
           --platform managed \
           --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app
         fi
