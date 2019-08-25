@@ -4,11 +4,11 @@ steps:
     args:
       - '-c'
       - |
-        docker pull asia.gcr.io/sutaba/sutaba-server:latest || exit 0
+        docker pull asia.gcr.io/$PROJECT_ID/sutaba-server:master || exit 0
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'build',
-            '-t', 'asia.gcr.io/sutaba/sutaba-server', '.',
-            '--cache-from', 'asia.gcr.io/sutaba/sutaba-server:latest',
+            '-t', 'asia.gcr.io/$PROJECT_ID/sutaba-server', '.',
+            '--cache-from', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME',
     ]
 images:
-  - 'asia.gcr.io/sutaba/sutaba-server'
+  - 'asia.gcr.io/$PROJECT_ID/sutaba-server'
