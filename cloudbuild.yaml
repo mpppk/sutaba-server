@@ -51,7 +51,7 @@ steps:
     args:
       - '-c'
       - |
-        if [ $BRANCH_NAME = "master" ]; then
+        if [ $BRANCH_NAME = "add_cloud_build_settings" ]; then
           gcloud beta run deploy sutaba-staging-server \
           --image asia.gcr.io/sutaba/$REPO_NAME:master \
           --platform managed \
