@@ -1,25 +1,34 @@
 steps:
-  - name: 'gcr.io/cloud-builders/go:debian'
+  - name: 'gcr.io/cloud-builders/go'
     id: 'go-mod-download'
-    env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
+    env: ['GO111MODULE=on', 'GOPATH=/go']
     args: ['mod', 'download']
     waitFor: ['-']
+    volumes:
+      - name: go-modules
+        path: /go
   - name: 'gcr.io/cloud-builders/go:debian'
-    env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
+    env: ['GO111MODULE=on', 'GOPATH=/go']
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         apt-get install -y build-essential && make lint
     waitFor: ['go-mod-download']
+    volumes:
+      - name: go-modules
+        path: /go
   - name: 'gcr.io/cloud-builders/go:debian'
-    env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
+    env: ['GO111MODULE=on', 'GOPATH=/go']
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         apt-get install -y build-essential && make test
     waitFor: ['go-mod-download']
+    volumes:
+      - name: go-modules
+        path: /go
   - name: 'gcr.io/cloud-builders/docker'
     id: 'docker-pull'
     entrypoint: 'bash'
