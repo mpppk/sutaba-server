@@ -70,6 +70,6 @@ steps:
           gcloud beta run deploy sutaba-staging-server \
           --image asia.gcr.io/sutaba/$REPO_NAME:master \
           --platform managed \
-          --region asia-northeast1
+          --region asia-northeast1 \
           --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app
         fi
