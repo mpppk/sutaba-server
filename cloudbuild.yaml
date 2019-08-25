@@ -5,7 +5,7 @@ steps:
     args:
       - '-c'
       - |
-        apt-get install build-essential && make lint
+        apt-get install -y build-essential && make lint
     waitFor: ['-']
   - name: 'gcr.io/cloud-builders/go:debian'
     env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
@@ -13,7 +13,7 @@ steps:
     args:
       - '-c'
       - |
-        apt-get install build-essential && make test
+        apt-get install -y build-essential && make test
     waitFor: ['-']
   - name: 'gcr.io/cloud-builders/docker'
     id: 'docker-pull'
