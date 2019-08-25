@@ -1,0 +1,14 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker pull asia.gcr.io/sutaba/sutaba-server:latest || exit 0
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build',
+            '-t', 'asia.gcr.io/sutaba/sutaba-server', '.',
+            '--cache-from', 'asia.gcr.io/sutaba/sutaba-server:latest',
+    ]
+images:
+  - 'asia.gcr.io/sutaba/sutaba-server'
