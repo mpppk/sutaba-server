@@ -6,6 +6,9 @@ steps:
       - '-c'
       - |
         apt-get install -y build-essential && make lint
+    volumes:
+      - name: go-modules
+        path: /go
     waitFor: ['-']
   - name: 'gcr.io/cloud-builders/go:debian'
     env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
@@ -14,6 +17,9 @@ steps:
       - '-c'
       - |
         apt-get install -y build-essential && make test
+    volumes:
+      - name: go-modules
+        path: /go
     waitFor: ['-']
   - name: 'gcr.io/cloud-builders/docker'
     id: 'docker-pull'
@@ -31,3 +37,14 @@ steps:
     ]
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ $BRANCH_NAME = "master" ]; then
+          gcloud beta run deploy sutaba-staging-server \
+          --image asia.gcr.io/sutaba/sutaba-server:master \
+          --platform managed \
+          --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app
+        fi
