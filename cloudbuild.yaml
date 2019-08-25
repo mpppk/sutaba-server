@@ -1,4 +1,18 @@
 steps:
+  - name: 'gcr.io/cloud-builders/go:debian'
+    id: 'install-build-essential'
+    env: ['GO111MODULE=on', 'GOPATH=/go']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        apt-get update && apt-get install -y build-essential
+    waitFor: ['-']
+    volumes:
+      - name: go-modules
+        path: /go
+      - name: usr-bin
+        path: /usr/bin
   - name: 'gcr.io/cloud-builders/go'
     id: 'go-mod-download'
     env: ['GO111MODULE=on', 'GOPATH=/go']
@@ -7,25 +21,33 @@ steps:
     volumes:
       - name: go-modules
         path: /go
+      - name: usr-bin
+        path: /usr/bin
   - name: 'gcr.io/cloud-builders/go:debian'
     env: ['GO111MODULE=on', 'GOPATH=/go']
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        apt-get install -y build-essential && make lint
-    waitFor: ['go-mod-download']
+    entrypoint: 'make'
+    args: ['lint']
+#    entrypoint: 'bash'
+#    args:
+#      - '-c'
+#      - |
+#        apt-get install -y build-essential && make lint
+    waitFor: ['go-mod-download', 'install-build-essential']
     volumes:
       - name: go-modules
         path: /go
+      - name: usr-bin
+        path: /usr/bin
   - name: 'gcr.io/cloud-builders/go:debian'
     env: ['GO111MODULE=on', 'GOPATH=/go']
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        apt-get install -y build-essential && make test
-    waitFor: ['go-mod-download']
+    entrypoint: 'make'
+    args: ['lint']
+#    entrypoint: 'bash'
+#    args:
+#      - '-c'
+#      - |
+#        apt-get install -y build-essential && make test
+    waitFor: ['go-mod-download', 'install-build-essential']
     volumes:
       - name: go-modules
         path: /go
