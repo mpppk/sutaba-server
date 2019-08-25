@@ -6,10 +6,7 @@ steps:
     args:
       - '-c'
       - |
-        apt-get update && apt-get install -y build-essential && cp /usr/bin/make /build-tools
-    volumes:
-      - name: build-tools
-        path: /build-tools
+        apt-get update && apt-get install -y build-essential && cp /usr/bin/make ./
     waitFor: ['-']
   - name: 'gcr.io/cloud-builders/go'
     id: 'go-mod-download'
@@ -20,25 +17,21 @@ steps:
       - name: go-modules
         path: /go
   - name: 'gcr.io/cloud-builders/go:debian'
-    env: ['GO111MODULE=on', 'GOPATH=/go', 'PATH=$PATH:/build-tools']
-    entrypoint: 'make'
+    env: ['GO111MODULE=on', 'GOPATH=/go']
+    entrypoint: './make'
     args: ['lint']
     waitFor: ['go-mod-download', 'install-build-essential']
     volumes:
       - name: go-modules
         path: /go
-      - name: build-tools
-        path: /build-tools
   - name: 'gcr.io/cloud-builders/go:debian'
     env: ['GO111MODULE=on', 'GOPATH=/go']
-    entrypoint: 'make'
+    entrypoint: './make'
     args: ['lint']
-    waitFor: ['go-mod-download', 'install-build-essential', 'PATH=$PATH:/build-tools']
+    waitFor: ['go-mod-download', 'install-build-essential']
     volumes:
       - name: go-modules
         path: /go
-      - name: build-tools
-        path: /build-tools
   - name: 'gcr.io/cloud-builders/docker'
     id: 'docker-pull'
     entrypoint: 'bash'
