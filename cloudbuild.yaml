@@ -1,11 +1,13 @@
 steps:
   - name: 'gcr.io/cloud-builders/go'
     env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
-    args: ['make', 'lint']
+    entrypoint: 'make'
+    args: ['lint']
     waitFor: ['-']
   - name: 'gcr.io/cloud-builders/go'
     env: ['GO111MODULE=on', 'PROJECT_ROOT=sutaba-server']
-    args: ['make', 'test']
+    entrypoint: 'make'
+    args: ['test']
     waitFor: ['-']
   - name: 'gcr.io/cloud-builders/docker'
     id: 'docker-pull'
