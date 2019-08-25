@@ -1,14 +1,23 @@
 steps:
+  - name: 'gcr.io/cloud-builders/go'
+    args: ['make', 'lint']
+    waitFor: ['-']
+  - name: 'gcr.io/cloud-builders/go'
+    args: ['make', 'test']
+    waitFor: ['-']
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'docker-pull'
     entrypoint: 'bash'
+    waitFor: ['-']
     args:
       - '-c'
       - |
         docker pull asia.gcr.io/$PROJECT_ID/sutaba-server:master || exit 0
   - name: 'gcr.io/cloud-builders/docker'
+    waitFor: ['docker-pull']
     args: [ 'build',
             '-t', 'asia.gcr.io/$PROJECT_ID/sutaba-server', '.',
             '--cache-from', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME',
     ]
-images:
-  - 'asia.gcr.io/$PROJECT_ID/sutaba-server'
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia.gcr.io/$PROJECT_ID/sutaba-server:$BRANCH_NAME'

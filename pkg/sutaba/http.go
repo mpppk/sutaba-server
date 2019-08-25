@@ -76,19 +76,19 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 				f := func() (*anaconda.Tweet, error) {
 					predict, err := classifierClient.Predict(mediaBytes)
 					if err != nil {
-						util.LogPrintfInOneLine("failed to predict: %v")
+						util.LogPrintfInOneLine("failed to predict: %v", err)
 						return nil, err
 					}
 
 					tweetText, err := PredToText(predict)
 					if err != nil {
-						util.LogPrintfInOneLine("failed to convert predict result to tweet text: %v")
+						util.LogPrintfInOneLine("failed to convert predict result to tweet text: %v", err)
 						return nil, err
 					}
 
 					postedTweet, err := conf.SendUser.PostByTweetType(tweetText, tweet)
 					if err != nil {
-						util.LogPrintfInOneLine("failed to tweet predict result: %v")
+						util.LogPrintfInOneLine("failed to tweet predict result: %v", err)
 						return nil, err
 					}
 					return &postedTweet, nil

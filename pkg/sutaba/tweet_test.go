@@ -16,7 +16,7 @@ func TestGetRandomSutabaLowConfidenceText(t *testing.T) {
 }
 
 func TestGetRandomRamenHighConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomRamenHighConfidenceText())
+	fmt.Println(GetRandomRamenHighConfidenceText(0.5))
 }
 func TestGetRandomRamenMiddleConfidenceText(t *testing.T) {
 	fmt.Println(GetRandomRamenMiddleConfidenceText(0.5))
