@@ -1,0 +1,59 @@
+steps:
+  # Install make command
+  - name: 'gcr.io/cloud-builders/go:debian'
+    id: &install-build-essential 'install-build-essential'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        apt-get update && apt-get install -y build-essential && cp /usr/bin/make ./
+    waitFor: ['-']
+
+  # Download go modules
+  - name: 'gcr.io/cloud-builders/go'
+    id: &go-mod-download-id 'go-mod-download'
+    env: [&gomodule_mode 'GO111MODULE=on', &gopath 'GOPATH=/go']
+    args: ['mod', 'download']
+    waitFor: ['-']
+    volumes:
+      - &go-modules-volume
+        name: go-modules
+        path: /go
+
+  # Lint go codes
+  - name: 'gcr.io/cloud-builders/go:debian'
+    env: [*gomodule_mode, *gopath]
+    entrypoint: './make'
+    args: ['lint']
+    waitFor: [*go-mod-download-id, *install-build-essential]
+    volumes: [*go-modules-volume]
+
+  # Test go codes
+  - name: 'gcr.io/cloud-builders/go:debian'
+    env: [*gomodule_mode, *gopath]
+    entrypoint: './make'
+    args: ['test']
+    waitFor: [*go-mod-download-id, *install-build-essential]
+    volumes: [*go-modules-volume]
+
+  # Pull latest docker image for using as cache
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'docker-pull'
+    entrypoint: 'bash'
+    waitFor: ['-']
+    args:
+      - '-c'
+      - |
+        docker pull asia.gcr.io/$PROJECT_ID/$REPO_NAME:master || exit 0
+
+  # Build docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    waitFor: ['docker-pull']
+    args: [ 'build',
+            '-t', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:$BRANCH_NAME', '.',
+            '--cache-from', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:master',
+    ]
+
+  # Push docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:$BRANCH_NAME']
