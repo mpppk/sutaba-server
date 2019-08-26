@@ -66,11 +66,12 @@ steps:
       - '-c'
       - |
         if [ $BRANCH_NAME = "add_cloud_build_settings" ]; then
-          gcloud beta run deploy sutaba-staging-server \
+          gcloud beta run deploy $REPO_NAME-$BRANCH_NAME \
           --image asia.gcr.io/$PROJECT_ID/$REPO_NAME:$BRANCH_NAME \
           --platform managed \
           --region asia-northeast1 \
           --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app \
           --verbosity debug
+          --allow-unauthenticated
           gcloud info --run-diagnostics
         fi
