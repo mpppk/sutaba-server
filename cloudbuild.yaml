@@ -71,7 +71,7 @@ steps:
           --platform managed \
           --region asia-northeast1 \
           --update-env-vars CLASSIFIER_SERVER_HOST=https://classifier-server-lkui2qyzba-an.a.run.app \
-          --verbosity debug
+          --verbosity debug \
           --allow-unauthenticated
           gcloud info --run-diagnostics
         fi
