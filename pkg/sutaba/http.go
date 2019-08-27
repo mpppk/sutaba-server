@@ -4,10 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
-
-	"github.com/ChimeraCoder/anaconda"
 
 	"github.com/mpppk/sutaba-server/pkg/classifier"
 
@@ -42,68 +38,26 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		classifierClient := classifier.NewClassifier(conf.ClassifierServerHost)
-
+		usecase := NewPostPredictTweetUsecase(&PostPredictTweetUseCaseConfig{
+			SendUser:          conf.SendUser,
+			ClassifierClient:  classifier.NewClassifier(conf.ClassifierServerHost),
+			ErrorTweetMessage: conf.ErrorTweetMessage,
+			SorryTweetMessage: conf.SorryTweetMessage,
+		})
 		tweets := events.TweetCreateEvents
 		for _, tweet := range tweets {
-			entityMediaList := tweet.Entities.Media
-			if entityMediaList == nil || len(entityMediaList) == 0 {
-				util.LogPrintfInOneLine("tweet is ignored because it has no media")
-				continue
+			postedTweets, ignoreReasons, err := usecase.ReplyToUsers(tweet, conf.SubscribeUsers)
+			if err != nil {
+				util.LogPrintlnInOneLine("error occurred: %v", err)
+				return c.String(http.StatusInternalServerError, fmt.Sprintf(`{"error": "%s"}`, err))
 			}
 
-			if !strings.Contains(tweet.Text, conf.SendUser.TargetKeyword) {
-				util.LogPrintfInOneLine("tweet is ignored because it has no keyword")
-				continue
+			if len(ignoreReasons) != 0 {
+				util.LogPrintfInOneLine("len(ignoreReasons) tweets are ignored. reasons: %v", ignoreReasons)
 			}
-			for _, subscribeUser := range conf.SubscribeUsers {
-				if tweet.User.Id == conf.SendUser.ID {
-					util.LogPrintfInOneLine("tweet is ignored because it is sent by bot")
-					continue
-				}
 
-				if tweet.InReplyToUserID != subscribeUser.ID {
-					util.LogPrintfInOneLine("tweet is ignored because it is not sent to subscribe user")
-					continue
-				}
-
-				mediaBytes, err := twitter.DownloadEntityMediaFromTweet(tweet, 3, 1)
-				if err != nil {
-					util.LogPrintfInOneLine("failed to download media: %v", err)
-					continue
-				}
-
-				f := func() (*anaconda.Tweet, error) {
-					predict, err := classifierClient.Predict(mediaBytes)
-					if err != nil {
-						util.LogPrintfInOneLine("failed to predict: %v", err)
-						return nil, err
-					}
-
-					tweetText, err := PredToText(predict)
-					if err != nil {
-						util.LogPrintfInOneLine("failed to convert predict result to tweet text: %v", err)
-						return nil, err
-					}
-
-					postedTweet, err := conf.SendUser.PostByTweetType(tweetText, tweet)
-					if err != nil {
-						util.LogPrintfInOneLine("failed to tweet predict result: %v", err)
-						return nil, err
-					}
-					return &postedTweet, nil
-				}
-				postedTweet, err := f()
-				if err != nil {
-					util.LogPrintlnInOneLine("error occurred:", err)
-					errTweetText := conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-					if subscribeUser.IsErrorReporter {
-						tweet := events.TweetCreateEvents[0]
-						subscribeUser.PostErrorTweet(errTweetText, conf.SorryTweetMessage, tweet.User.ScreenName, tweet.IdStr)
-					}
-					return c.String(http.StatusInternalServerError, fmt.Sprintf("%s", err))
-				}
-				util.LogPrintlnInOneLine("posted tweet:", postedTweet)
+			if len(postedTweets) > 0 {
+				util.LogPrintfInOneLine("posted tweets: %v", postedTweets)
 			}
 		}
 

@@ -46,11 +46,11 @@ func (u *User) PostByTweetType(text string, tweet *anaconda.Tweet) (anaconda.Twe
 	case Tweet:
 		return u.Client.PostTweet(text, nil)
 	case Reply:
-		return u.PostReply(text, tweet.User.ScreenName, tweet.IdStr)
+		return u.PostReply(text, tweet.IdStr, []string{tweet.User.ScreenName})
 	case QuoteTweet:
 		return u.PostQuoteTweet(text, tweet)
 	case ReplyWithQuote:
-		return u.PostReplyWithQuote(text, tweet, tweet.User.ScreenName, tweet.IdStr)
+		return u.PostReplyWithQuote(text, tweet, tweet.IdStr, []string{tweet.User.ScreenName})
 	}
 	return anaconda.Tweet{}, fmt.Errorf("unknown TweetType: %v", u.TweetType)
 }
@@ -59,19 +59,20 @@ func (u *User) PostQuoteTweet(text string, quoteTweet *anaconda.Tweet) (anaconda
 	return PostQuoteTweet(u.Client, text, quoteTweet)
 }
 
-func (u *User) PostReply(text, toScreenName, toTweetIDStr string) (anaconda.Tweet, error) {
-	return PostReply(u.Client, text, toScreenName, toTweetIDStr)
+func (u *User) PostReply(text, toTweetIDStr string, toScreenNames []string) (anaconda.Tweet, error) {
+	return PostReply(u.Client, text, toTweetIDStr, toScreenNames)
 }
 
-func (u *User) PostReplyWithQuote(text string, quoteTweet *anaconda.Tweet, toScreenName, toTweetIDStr string) (anaconda.Tweet, error) {
-	return PostReplyWithQuote(u.Client, text, quoteTweet, toScreenName, toTweetIDStr)
+func (u *User) PostReplyWithQuote(text string, quoteTweet *anaconda.Tweet, toTweetIDStr string, toScreenNames []string) (anaconda.Tweet, error) {
+	fmt.Println("screen names:", toScreenNames)
+	return PostReplyWithQuote(u.Client, text, quoteTweet, toTweetIDStr, toScreenNames)
 }
 
-func (u *User) PostErrorTweet(notifyText, sorryText, toSorryUserScreenName, toSorryTweetIDStr string) {
+func (u *User) PostErrorTweet(notifyText, sorryText, toSorryTweetIDStr, toSorryUserScreenName string) {
 	if _, err := u.Client.PostTweet(notifyText, nil); err != nil {
 		util.LogPrintlnInOneLine("failed to tweet error notify message", err)
 	}
-	if _, err := u.PostReply(sorryText, toSorryUserScreenName, toSorryTweetIDStr); err != nil {
+	if _, err := u.PostReply(sorryText, toSorryTweetIDStr, []string{toSorryUserScreenName}); err != nil {
 		util.LogPrintlnInOneLine("failed to tweet sorry message", err)
 	}
 }
