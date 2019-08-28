@@ -48,7 +48,7 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 		for _, tweet := range tweets {
 			postedTweets, ignoreReasons, err := usecase.ReplyToUsers(tweet, conf.SubscribeUsers)
 			if err != nil {
-				util.LogPrintlnInOneLine("error occurred: %v", err)
+				util.LogPrintfInOneLine("error occurred: %v", err)
 				return c.String(http.StatusInternalServerError, fmt.Sprintf(`{"error": "%s"}`, err))
 			}
 
