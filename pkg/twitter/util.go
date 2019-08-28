@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/ChimeraCoder/anaconda"
 )
@@ -32,10 +33,14 @@ func PostQuoteTweet(api *anaconda.TwitterApi, text string, quotedTweet *anaconda
 	return api.PostTweet(toQuoteTweet(text, quotedTweet), nil)
 }
 
-func PostReply(api *anaconda.TwitterApi, text, toScreenName, toTweetIDStr string) (anaconda.Tweet, error) {
+func PostReply(api *anaconda.TwitterApi, text, toTweetIDStr string, toScreenNames []string) (anaconda.Tweet, error) {
 	v := url.Values{}
 	v.Set("in_reply_to_status_id", toTweetIDStr)
-	newText := fmt.Sprintf("@%s\n%s", toScreenName, text)
+	var mentions []string
+	for _, toScreenName := range toScreenNames {
+		mentions = append(mentions, "@"+toScreenName)
+	}
+	newText := fmt.Sprintf("%s\n%s", strings.Join(mentions, " "), text)
 	return api.PostTweet(newText, v)
 }
 
@@ -43,7 +48,8 @@ func PostReplyWithQuote(
 	api *anaconda.TwitterApi,
 	text string,
 	quotedTweet *anaconda.Tweet,
-	toScreenName,
-	toTweetIDStr string) (anaconda.Tweet, error) {
-	return PostReply(api, toQuoteTweet(text, quotedTweet), toScreenName, toTweetIDStr)
+	toTweetIDStr string,
+	toScreenNames []string,
+) (anaconda.Tweet, error) {
+	return PostReply(api, toQuoteTweet(text, quotedTweet), toTweetIDStr, toScreenNames)
 }
