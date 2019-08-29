@@ -46,35 +46,13 @@ func (p *PostPredictTweetUseCase) isTargetTweet(tweet *anaconda.Tweet) (bool, st
 	return true, ""
 }
 
-func (p *PostPredictTweetUseCase) ReplyToUsers(tweet *anaconda.Tweet, subscribeUsers []*twitter.User) ([]*anaconda.Tweet, []string, error) {
-	var postedTweets []*anaconda.Tweet
-	var ignoreReasons []string
-	for _, subscribeUser := range subscribeUsers {
-		postedTweet, ignoredReason, err := p.ReplyToUser(tweet, subscribeUser)
-		if err != nil {
-			return nil, nil, err
-		}
-		if ignoredReason == "" {
-			postedTweets = append(postedTweets, postedTweet)
-			continue
-		}
-		ignoreReasons = append(ignoreReasons, ignoredReason)
-	}
-	return postedTweets, ignoreReasons, nil
-}
-
-func (p *PostPredictTweetUseCase) ReplyToUser(tweet *anaconda.Tweet, subscribeUser *twitter.User) (*anaconda.Tweet, string, error) {
-	if tweet.InReplyToUserID != subscribeUser.ID {
-		return nil, "tweet is ignored because it is not sent to subscribe user", nil
-	}
+func (p *PostPredictTweetUseCase) ReplyToUser(tweet *anaconda.Tweet) (*anaconda.Tweet, string, error) {
 	ok, reason := p.isTargetTweet(tweet)
 	if ok {
 		postedTweet, err := p.postPredictTweet(tweet, "")
 		if err != nil {
 			errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-			if subscribeUser.IsErrorReporter {
-				subscribeUser.PostErrorTweet(errTweetText, p.conf.SorryTweetMessage, tweet.IdStr, tweet.User.ScreenName)
-			}
+			p.conf.SendUser.PostErrorTweet(errTweetText, p.conf.SorryTweetMessage, tweet.IdStr, tweet.User.ScreenName)
 			return nil, "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
 		}
 		return postedTweet, "", nil
@@ -103,9 +81,7 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *anaconda.Tweet, subscribeUs
 	postedTweet, err := f()
 	if err != nil {
 		errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-		if subscribeUser.IsErrorReporter {
-			subscribeUser.PostErrorTweet(errTweetText, p.conf.SorryTweetMessage, tweet.IdStr, tweet.User.ScreenName)
-		}
+		p.conf.SendUser.PostErrorTweet(errTweetText, p.conf.SorryTweetMessage, tweet.IdStr, tweet.User.ScreenName)
 		return nil, "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
 	}
 	return postedTweet, "", nil

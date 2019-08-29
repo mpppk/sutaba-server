@@ -40,16 +40,6 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				return err
 			}
 
-			ownerUser := twitter.NewUser(
-				conf.OwnerTwitterAccessToken,
-				conf.OwnerTwitterAccessTokenSecret,
-				conf.TwitterConsumerKey,
-				conf.TwitterConsumerSecret,
-				conf.OwnerTwitterUserID,
-				conf.TweetKeyword,
-				true,
-				twitter.ReplyWithQuote,
-			)
 			botUser := twitter.NewUser(
 				conf.BotTwitterAccessToken,
 				conf.BotTwitterAccessTokenSecret,
@@ -62,7 +52,6 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 			)
 			predictHandlerConfig := &sutaba.PredictHandlerConfig{
 				SendUser:             botUser,
-				SubscribeUsers:       []*twitter.User{ownerUser, botUser},
 				ClassifierServerHost: conf.ClassifierServerHost,
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
 				SorryTweetMessage:    conf.SorryTweetMessage,
@@ -119,17 +108,6 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 		}
 	}
 
-	ownerId := &option.Int64Flag{
-		Flag: &option.Flag{
-			Name:      "owner-id",
-			Usage:     "owner twitter user id (error tweet will be send to owner if something is failed)",
-			ViperName: "OwnerTwitterUserID",
-		},
-	}
-	if err := option.RegisterInt64Flag(cmd, ownerId); err != nil {
-		return nil, err
-	}
-
 	botId := &option.Int64Flag{
 		Flag: &option.Flag{
 			Name:      "bot-id",
@@ -144,9 +122,8 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 	envStrs := []string{
 		"PORT", "ERROR_TWEET_MESSAGE", "SORRY_TWEET_MESSAGE",
 		"CLASSIFIER_SERVER_HOST",
-		"TWEET_KEYWORD", "OWNER_TWITTER_USER_ID", "BOT_TWITTER_USER_ID",
+		"TWEET_KEYWORD", "BOT_TWITTER_USER_ID",
 		"TWITTER_CONSUMER_KEY", "TWITTER_CONSUMER_SECRET",
-		"OWNER_TWITTER_ACCESS_TOKEN", "OWNER_TWITTER_ACCESS_TOKEN_SECRET",
 		"BOT_TWITTER_ACCESS_TOKEN", "BOT_TWITTER_ACCESS_TOKEN_SECRET",
 	}
 
