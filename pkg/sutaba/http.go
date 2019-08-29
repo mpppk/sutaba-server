@@ -15,7 +15,6 @@ import (
 
 type PredictHandlerConfig struct {
 	SendUser             *twitter.User
-	SubscribeUsers       []*twitter.User
 	ClassifierServerHost string
 	ErrorTweetMessage    string
 	SorryTweetMessage    string
@@ -46,18 +45,22 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 		})
 		tweets := events.TweetCreateEvents
 		for _, tweet := range tweets {
-			postedTweets, ignoreReasons, err := usecase.ReplyToUsers(tweet, conf.SubscribeUsers)
+			if tweet.InReplyToUserID != conf.SendUser.ID {
+				util.LogPrintfInOneLine("tweet is ignored because it is not sent to subscribe user")
+				continue
+			}
+			postedTweet, ignoreReason, err := usecase.ReplyToUser(tweet)
 			if err != nil {
 				util.LogPrintfInOneLine("error occurred: %v", err)
 				return c.String(http.StatusInternalServerError, fmt.Sprintf(`{"error": "%s"}`, err))
 			}
 
-			if len(ignoreReasons) != 0 {
-				util.LogPrintfInOneLine("len(ignoreReasons) tweets are ignored. reasons: %v", ignoreReasons)
+			if ignoreReason != "" {
+				util.LogPrintfInOneLine("tweet is ignored. reason: %v", ignoreReason)
 			}
 
-			if len(postedTweets) > 0 {
-				util.LogPrintfInOneLine("posted tweets: %v", postedTweets)
+			if postedTweet != nil {
+				util.LogPrintfInOneLine("posted tweet: %v", postedTweet)
 			}
 		}
 
