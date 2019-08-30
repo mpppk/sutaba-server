@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/mpppk/sutaba-server/pkg/classifier"
 
@@ -34,6 +35,12 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 		}
 
 		if events.GetEventName() != twitter.TweetCreateEventsEventName {
+			return c.NoContent(http.StatusNoContent)
+		}
+
+		userIDStr := strconv.FormatInt(conf.SendUser.ID, 10)
+		if events.ForUserId != userIDStr {
+			util.LogPrintfInOneLine("tweet is ignored because event is not for bot")
 			return c.NoContent(http.StatusNoContent)
 		}
 
