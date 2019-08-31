@@ -1,4 +1,4 @@
-package sutaba
+package handler
 
 import (
 	"encoding/json"
@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mpppk/sutaba-server/pkg/classifier"
+	usecase2 "github.com/mpppk/sutaba-server/pkg/application/usecase"
+
+	"github.com/mpppk/sutaba-server/pkg/infra/classifier"
 
 	"github.com/mpppk/sutaba-server/pkg/util"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mpppk/sutaba-server/pkg/twitter"
+	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
 )
 
 type PredictHandlerConfig struct {
@@ -44,7 +46,7 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 			return c.NoContent(http.StatusNoContent)
 		}
 
-		usecase := NewPostPredictTweetUsecase(&PostPredictTweetUseCaseConfig{
+		usecase := usecase2.NewPostPredictTweetUsecase(&usecase2.PostPredictTweetUseCaseConfig{
 			SendUser:          conf.SendUser,
 			ClassifierClient:  classifier.NewClassifier(conf.ClassifierServerHost),
 			ErrorTweetMessage: conf.ErrorTweetMessage,

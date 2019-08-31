@@ -1,4 +1,4 @@
-package sutaba
+package message
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mpppk/sutaba-server/pkg/classifier"
+	"github.com/mpppk/sutaba-server/pkg/infra/classifier"
 
 	"golang.org/x/xerrors"
 )

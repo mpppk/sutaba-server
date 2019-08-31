@@ -1,4 +1,4 @@
-package sutaba
+package message
 
 import (
 	"fmt"

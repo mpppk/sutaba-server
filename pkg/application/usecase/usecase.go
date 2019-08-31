@@ -1,16 +1,18 @@
-package sutaba
+package usecase
 
 import (
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/domain/message"
+
 	"golang.org/x/xerrors"
 
-	"github.com/mpppk/sutaba-server/pkg/classifier"
+	"github.com/mpppk/sutaba-server/pkg/infra/classifier"
 
 	"github.com/ChimeraCoder/anaconda"
-	"github.com/mpppk/sutaba-server/pkg/twitter"
+	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
 )
 
 type PostPredictTweetUseCaseConfig struct {
@@ -110,7 +112,7 @@ func (p *PostPredictTweetUseCase) tweetToPredText(tweet *anaconda.Tweet) (string
 		return "", xerrors.Errorf("failed to predict: %v", err)
 	}
 
-	tweetText, err := PredToText(predict)
+	tweetText, err := message.PredToText(predict)
 	if err != nil {
 		return "", xerrors.Errorf("failed to convert predict result to tweet text: %v", err)
 	}
