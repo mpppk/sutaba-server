@@ -5,13 +5,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/application/output"
+
 	"github.com/mpppk/sutaba-server/pkg/application/repository"
 
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	"github.com/mpppk/sutaba-server/pkg/util"
-
-	"github.com/mpppk/sutaba-server/pkg/domain/message"
 
 	"golang.org/x/xerrors"
 )
@@ -23,17 +23,20 @@ type PostPredictTweetUseCaseConfig struct {
 	SorryTweetMessage    string
 	TwitterRepository    repository.TwitterRepository
 	ClassifierRepository repository.ImageClassifierRepository
+	MessageConverter     output.MessageConverter
 }
 
 type PostPredictTweetUseCase struct {
 	conf              *PostPredictTweetUseCaseConfig
 	twitterRepository repository.TwitterRepository
+	messageConverter  output.MessageConverter
 }
 
 func NewPostPredictTweetUsecase(conf *PostPredictTweetUseCaseConfig) *PostPredictTweetUseCase {
 	return &PostPredictTweetUseCase{
 		conf:              conf,
 		twitterRepository: conf.TwitterRepository,
+		messageConverter:  conf.MessageConverter,
 	}
 }
 
@@ -133,14 +136,14 @@ func (p *PostPredictTweetUseCase) tweetToPredText(tweet *model.Tweet) (string, e
 		return "", err
 	}
 
-	predict, err := p.conf.ClassifierRepository.Do(mediaBytes)
+	classifyResult, err := p.conf.ClassifierRepository.Do(mediaBytes)
 	if err != nil {
-		return "", xerrors.Errorf("failed to predict: %v", err)
+		return "", xerrors.Errorf("failed to classifyResult: %v", err)
 	}
 
-	tweetText, err := message.PredToText(predict)
+	tweetText, err := p.messageConverter.GenerateResultMessage(classifyResult)
 	if err != nil {
-		return "", xerrors.Errorf("failed to convert predict result to tweet text: %v", err)
+		return "", xerrors.Errorf("failed to convert classifyResult result to tweet text: %v", err)
 	}
 	return tweetText, err
 }

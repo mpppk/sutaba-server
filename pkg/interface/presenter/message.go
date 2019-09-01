@@ -1,4 +1,4 @@
-package message
+package presenter
 
 import (
 	"fmt"
@@ -8,10 +8,16 @@ import (
 	"github.com/mpppk/sutaba-server/pkg/application/repository"
 )
 
-func PredToText(predict *repository.ClassifyResult) (string, error) {
-	confidence := float32(predict.Confidence)
+type SutabaPoliceMessageConverter struct{}
+
+func (m *SutabaPoliceMessageConverter) GenerateResultMessage(result *repository.ClassifyResult) (string, error) {
+	confidence := float32(result.Confidence)
+	return classAndConfidenceToText(result.Class, confidence)
+}
+
+func classAndConfidenceToText(className string, confidence float32) (string, error) {
 	predStr := ""
-	switch predict.Class {
+	switch className {
 	case "sutaba":
 		if confidence > 0.8 {
 			predStr = GetRandomSutabaHighConfidenceText()
