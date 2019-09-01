@@ -6,6 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/registry"
+
+	twitter2 "github.com/mpppk/sutaba-server/pkg/domain/twitter"
+
 	"github.com/mpppk/sutaba-server/pkg/infra/handler"
 
 	"github.com/mpppk/sutaba-server/pkg/util"
@@ -40,21 +44,20 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				return err
 			}
 
-			botUser := twitter.NewUser(
-				conf.BotTwitterAccessToken,
-				conf.BotTwitterAccessTokenSecret,
-				conf.TwitterConsumerKey,
-				conf.TwitterConsumerSecret,
-				conf.BotTwitterUserID,
-				conf.TweetKeyword,
-				true,
-				twitter.ReplyWithQuote,
-			)
+			user := twitter2.NewTwitterUser(conf.BotTwitterUserID, "sutaba_police2")
+
+			repositoryConfig := registry.RepositoryConfig{
+				ConsumerKey:       conf.TwitterConsumerKey,
+				ConsumerSecret:    conf.TwitterConsumerSecret,
+				AccessToken:       conf.BotTwitterAccessToken,
+				AccessTokenSecret: conf.BotTwitterAccessTokenSecret,
+			}
 			predictHandlerConfig := &handler.PredictHandlerConfig{
-				SendUser:             botUser,
+				SendUser:             &user,
 				ClassifierServerHost: conf.ClassifierServerHost,
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
 				SorryTweetMessage:    conf.SorryTweetMessage,
+				Repository:           registry.NewRepository(repositoryConfig),
 			}
 
 			e := echo.New()

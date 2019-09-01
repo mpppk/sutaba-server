@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/mpppk/sutaba-server/pkg/registry"
+
+	twitter2 "github.com/mpppk/sutaba-server/pkg/domain/twitter"
+
 	usecase2 "github.com/mpppk/sutaba-server/pkg/application/usecase"
 
 	"github.com/mpppk/sutaba-server/pkg/infra/classifier"
@@ -17,10 +21,11 @@ import (
 )
 
 type PredictHandlerConfig struct {
-	SendUser             *twitter.User
+	SendUser             *twitter2.TwitterUser
 	ClassifierServerHost string
 	ErrorTweetMessage    string
 	SorryTweetMessage    string
+	Repository           registry.Repository
 }
 
 func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) error {
@@ -42,22 +47,24 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 
 		userIDStr := strconv.FormatInt(conf.SendUser.ID, 10)
 		if events.ForUserId != userIDStr {
-			util.LogPrintfInOneLine("tweet is ignored because event is not for bot")
+			util.LogPrintfInOneLine("anacondaTweet is ignored because event is not for bot")
 			return c.NoContent(http.StatusNoContent)
 		}
 
 		usecase := usecase2.NewPostPredictTweetUsecase(&usecase2.PostPredictTweetUseCaseConfig{
-			SendUser:          conf.SendUser,
+			TwitterRepository: conf.Repository.NewTwitterRepository(),
+			SendUser:          *conf.SendUser,
 			ClassifierClient:  classifier.NewClassifier(conf.ClassifierServerHost),
 			ErrorTweetMessage: conf.ErrorTweetMessage,
 			SorryTweetMessage: conf.SorryTweetMessage,
 		})
 		tweets := events.TweetCreateEvents
-		for _, tweet := range tweets {
-			if tweet.InReplyToUserID != conf.SendUser.ID {
-				util.LogPrintfInOneLine("tweet is ignored because it is not sent to subscribe user")
+		for _, anacondaTweet := range tweets {
+			if anacondaTweet.InReplyToUserID != conf.SendUser.ID {
+				util.LogPrintfInOneLine("anacondaTweet is ignored because it is not sent to subscribe user")
 				continue
 			}
+			tweet := twitter.ToTweet(anacondaTweet)
 			postedTweet, ignoreReason, err := usecase.ReplyToUser(tweet)
 			if err != nil {
 				util.LogPrintfInOneLine("error occurred: %v", err)
@@ -65,11 +72,11 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 			}
 
 			if ignoreReason != "" {
-				util.LogPrintfInOneLine("tweet is ignored. reason: %v", ignoreReason)
+				util.LogPrintfInOneLine("anacondaTweet is ignored. reason: %v", ignoreReason)
 			}
 
 			if postedTweet != nil {
-				util.LogPrintfInOneLine("posted tweet: %v", postedTweet)
+				util.LogPrintfInOneLine("posted anacondaTweet: %v", postedTweet)
 			}
 		}
 

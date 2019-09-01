@@ -1,7 +1,7 @@
 package twitter
 
 import (
-	"fmt"
+	"github.com/mpppk/sutaba-server/pkg/domain/twitter"
 
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/mpppk/sutaba-server/pkg/util"
@@ -17,11 +17,8 @@ const (
 )
 
 type User struct {
-	Client          *anaconda.TwitterApi
-	ID              int64
-	TargetKeyword   string
-	IsErrorReporter bool
-	TweetType       TweetType
+	Client *anaconda.TwitterApi
+	ID     int64
 }
 
 func NewUser(
@@ -34,38 +31,20 @@ func NewUser(
 			consumerKey,
 			consumerSecret,
 		),
-		ID:              id,
-		TargetKeyword:   keyword,
-		IsErrorReporter: isErrorReporter,
-		TweetType:       tweetType,
+		ID: id,
 	}
 }
 
-func (u *User) PostByTweetType(text string, tweet *anaconda.Tweet) (anaconda.Tweet, error) {
-	switch u.TweetType {
-	case Tweet:
-		return u.Client.PostTweet(text, nil)
-	case Reply:
-		return u.PostReply(text, tweet.IdStr, []string{tweet.User.ScreenName})
-	case QuoteTweet:
-		return u.PostQuoteTweet(text, tweet)
-	case ReplyWithQuote:
-		return u.PostReplyWithQuote(text, tweet, tweet.IdStr, []string{tweet.User.ScreenName})
-	}
-	return anaconda.Tweet{}, fmt.Errorf("unknown TweetType: %v", u.TweetType)
+func (u *User) PostQuoteTweet(text string, quotedTweetIDStr, quotedTweetUserID string) (*twitter.Tweet, error) {
+	return PostQuoteTweet(u.Client, text, quotedTweetIDStr, quotedTweetUserID)
 }
 
-func (u *User) PostQuoteTweet(text string, quoteTweet *anaconda.Tweet) (anaconda.Tweet, error) {
-	return PostQuoteTweet(u.Client, text, quoteTweet)
-}
-
-func (u *User) PostReply(text, toTweetIDStr string, toScreenNames []string) (anaconda.Tweet, error) {
+func (u *User) PostReply(text, toTweetIDStr string, toScreenNames []string) (*twitter.Tweet, error) {
 	return PostReply(u.Client, text, toTweetIDStr, toScreenNames)
 }
 
-func (u *User) PostReplyWithQuote(text string, quoteTweet *anaconda.Tweet, toTweetIDStr string, toScreenNames []string) (anaconda.Tweet, error) {
-	fmt.Println("screen names:", toScreenNames)
-	return PostReplyWithQuote(u.Client, text, quoteTweet, toTweetIDStr, toScreenNames)
+func (u *User) PostReplyWithQuote(text string, quotedTweetIDStr, quotedTweetUserScreenName, toTweetIDStr string, toScreenNames []string) (*twitter.Tweet, error) {
+	return PostReplyWithQuote(u.Client, text, quotedTweetIDStr, quotedTweetUserScreenName, toTweetIDStr, toScreenNames)
 }
 
 func (u *User) PostErrorTweet(notifyText, sorryText, toSorryTweetIDStr, toSorryUserScreenName string) {
@@ -74,5 +53,12 @@ func (u *User) PostErrorTweet(notifyText, sorryText, toSorryTweetIDStr, toSorryU
 	}
 	if _, err := u.PostReply(sorryText, toSorryTweetIDStr, []string{toSorryUserScreenName}); err != nil {
 		util.LogPrintlnInOneLine("failed to tweet sorry message", err)
+	}
+}
+
+func toUser(anacondaUser *anaconda.User) *twitter.TwitterUser {
+	return &twitter.TwitterUser{
+		ID:         anacondaUser.Id,
+		ScreenName: anacondaUser.ScreenName,
 	}
 }

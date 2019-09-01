@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/mpppk/sutaba-server/pkg/domain/twitter"
+
 	"github.com/ChimeraCoder/anaconda"
 )
 
@@ -21,19 +23,22 @@ func CreateCRCToken(crcToken, consumerSecret string) string {
 	return "sha256=" + base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func toQuoteTweet(text string, quotedTweet *anaconda.Tweet) string {
-	tweetIdStr := quotedTweet.IdStr
+func toQuoteTweet(text string, quotedTweetIDStr, quotedTweetUserScreenName string) string {
 	return text + " " + BuildTweetUrl(
-		quotedTweet.User.ScreenName,
-		tweetIdStr,
+		quotedTweetUserScreenName,
+		quotedTweetIDStr,
 	)
 }
 
-func PostQuoteTweet(api *anaconda.TwitterApi, text string, quotedTweet *anaconda.Tweet) (anaconda.Tweet, error) {
-	return api.PostTweet(toQuoteTweet(text, quotedTweet), nil)
+func PostQuoteTweet(api *anaconda.TwitterApi, text string, quotedTweetIDStr, quotedTweetUserScreenName string) (*twitter.Tweet, error) {
+	anacondaTweet, err := api.PostTweet(toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName), nil)
+	if err != nil {
+		return nil, err
+	}
+	return ToTweet(&anacondaTweet), nil
 }
 
-func PostReply(api *anaconda.TwitterApi, text, toTweetIDStr string, toScreenNames []string) (anaconda.Tweet, error) {
+func PostReply(api *anaconda.TwitterApi, text, toTweetIDStr string, toScreenNames []string) (*twitter.Tweet, error) {
 	v := url.Values{}
 	v.Set("in_reply_to_status_id", toTweetIDStr)
 	var mentions []string
@@ -41,15 +46,22 @@ func PostReply(api *anaconda.TwitterApi, text, toTweetIDStr string, toScreenName
 		mentions = append(mentions, "@"+toScreenName)
 	}
 	newText := fmt.Sprintf("%s\n%s", strings.Join(mentions, " "), text)
-	return api.PostTweet(newText, v)
+	anacondaTweet, err := api.PostTweet(newText, v)
+	if err != nil {
+		return nil, err
+	}
+	return ToTweet(&anacondaTweet), nil
 }
 
 func PostReplyWithQuote(
 	api *anaconda.TwitterApi,
 	text string,
-	quotedTweet *anaconda.Tweet,
+	quotedTweetIDStr string,
+	quotedTweetUserScreenName string,
 	toTweetIDStr string,
 	toScreenNames []string,
-) (anaconda.Tweet, error) {
-	return PostReply(api, toQuoteTweet(text, quotedTweet), toTweetIDStr, toScreenNames)
+) (*twitter.Tweet, error) {
+	quotedTweetText := toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName)
+	return PostReply(api, quotedTweetText, toTweetIDStr, toScreenNames)
+
 }
