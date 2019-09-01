@@ -3,22 +3,15 @@ package message
 import (
 	"fmt"
 	"math/rand"
-	"strconv"
 	"time"
 
-	"github.com/mpppk/sutaba-server/pkg/infra/classifier"
-
-	"golang.org/x/xerrors"
+	"github.com/mpppk/sutaba-server/pkg/application/repository"
 )
 
-func PredToText(predict *classifier.ImagePredictResponse) (string, error) {
-	conf, err := strconv.ParseFloat(predict.Confidence, 32)
-	if err != nil {
-		return "", xerrors.Errorf("failed to parse confidence(%s) to float: %w", predict.Confidence)
-	}
-	confidence := float32(conf)
+func PredToText(predict *repository.ClassifyResult) (string, error) {
+	confidence := float32(predict.Confidence)
 	predStr := ""
-	switch predict.Pred {
+	switch predict.Class {
 	case "sutaba":
 		if confidence > 0.8 {
 			predStr = GetRandomSutabaHighConfidenceText()

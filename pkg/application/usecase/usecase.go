@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
-	twitter2 "github.com/mpppk/sutaba-server/pkg/domain/twitter"
+	"github.com/mpppk/sutaba-server/pkg/application/repository"
+
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	"github.com/mpppk/sutaba-server/pkg/util"
 
@@ -13,23 +15,21 @@ import (
 
 	"golang.org/x/xerrors"
 
-	"github.com/mpppk/sutaba-server/pkg/infra/classifier"
-
 	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
 )
 
 type PostPredictTweetUseCaseConfig struct {
-	SendUser          twitter2.TwitterUser
-	TargetKeyword     string
-	ClassifierClient  *classifier.Classifier
-	ErrorTweetMessage string
-	SorryTweetMessage string
-	TwitterRepository twitter2.Repository
+	SendUser             model.TwitterUser
+	TargetKeyword        string
+	ErrorTweetMessage    string
+	SorryTweetMessage    string
+	TwitterRepository    repository.TwitterRepository
+	ClassifierRepository repository.ImageClassifierRepository
 }
 
 type PostPredictTweetUseCase struct {
 	conf              *PostPredictTweetUseCaseConfig
-	twitterRepository twitter2.Repository
+	twitterRepository repository.TwitterRepository
 }
 
 func NewPostPredictTweetUsecase(conf *PostPredictTweetUseCaseConfig) *PostPredictTweetUseCase {
@@ -39,7 +39,7 @@ func NewPostPredictTweetUsecase(conf *PostPredictTweetUseCaseConfig) *PostPredic
 	}
 }
 
-func (p *PostPredictTweetUseCase) isTargetTweet(tweet *twitter2.Tweet) (bool, string) {
+func (p *PostPredictTweetUseCase) isTargetTweet(tweet *model.Tweet) (bool, string) {
 	if len(tweet.MediaURLs) == 0 {
 		return false, "tweet is ignored because it has no media"
 	}
@@ -53,10 +53,10 @@ func (p *PostPredictTweetUseCase) isTargetTweet(tweet *twitter2.Tweet) (bool, st
 	return true, ""
 }
 
-func (p *PostPredictTweetUseCase) ReplyToUser(tweet *twitter2.Tweet) (*twitter2.Tweet, string, error) {
+func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (*model.Tweet, string, error) {
 	ok, reason := p.isTargetTweet(tweet)
 	if ok {
-		f := func() (*twitter2.Tweet, error) {
+		f := func() (*model.Tweet, error) {
 			tweetText, err := p.tweetToPredText(tweet)
 			if err != nil {
 				return nil, err
@@ -95,7 +95,7 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *twitter2.Tweet) (*twitter2.
 	if !ok {
 		return nil, reason + ", and " + quoteReason, nil
 	}
-	f := func() (*twitter2.Tweet, error) {
+	f := func() (*model.Tweet, error) {
 		tweetText, err := p.tweetToPredText(tweet.QuoteTweet)
 		if err != nil {
 			return nil, err
@@ -129,13 +129,13 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *twitter2.Tweet) (*twitter2.
 	return postedTweet, "", nil
 }
 
-func (p *PostPredictTweetUseCase) tweetToPredText(tweet *twitter2.Tweet) (string, error) {
+func (p *PostPredictTweetUseCase) tweetToPredText(tweet *model.Tweet) (string, error) {
 	mediaBytes, err := twitter.DownloadMediaFromTweet(tweet, 3, 1)
 	if err != nil {
 		return "", err
 	}
 
-	predict, err := p.conf.ClassifierClient.Predict(mediaBytes)
+	predict, err := p.conf.ClassifierRepository.Do(mediaBytes)
 	if err != nil {
 		return "", xerrors.Errorf("failed to predict: %v", err)
 	}

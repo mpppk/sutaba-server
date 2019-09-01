@@ -1,13 +1,12 @@
-package twitter
+package model
 
 import (
 	"strconv"
 )
 
 type TwitterUser struct {
-	socialRepository Repository
-	ID               int64 // FIXME do not expose
-	ScreenName       string
+	ID         int64 // FIXME do not expose
+	ScreenName string
 }
 
 func NewTwitterUser(id int64, name string) TwitterUser {

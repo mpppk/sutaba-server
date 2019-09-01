@@ -2,17 +2,17 @@ package twitter
 
 import (
 	"github.com/ChimeraCoder/anaconda"
-	"github.com/mpppk/sutaba-server/pkg/domain/twitter"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 )
 
-func ToTweet(anacondaTweet *anaconda.Tweet) *twitter.Tweet {
+func ToTweet(anacondaTweet *anaconda.Tweet) *model.Tweet {
 	mediaList := getMediaList(anacondaTweet)
 	var mediaURLs []string
 	for _, media := range mediaList {
 		mediaURLs = append(mediaURLs, media.Media_url_https)
 	}
 
-	tweet := &twitter.Tweet{
+	tweet := &model.Tweet{
 		ID:        anacondaTweet.Id,
 		User:      *toUser(&anacondaTweet.User),
 		Text:      anacondaTweet.Text,

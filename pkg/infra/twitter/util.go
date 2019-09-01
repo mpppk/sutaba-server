@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/mpppk/sutaba-server/pkg/domain/twitter"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	"github.com/ChimeraCoder/anaconda"
 )
@@ -30,7 +30,7 @@ func toQuoteTweet(text string, quotedTweetIDStr, quotedTweetUserScreenName strin
 	)
 }
 
-func PostQuoteTweet(api *anaconda.TwitterApi, text string, quotedTweetIDStr, quotedTweetUserScreenName string) (*twitter.Tweet, error) {
+func PostQuoteTweet(api *anaconda.TwitterApi, text string, quotedTweetIDStr, quotedTweetUserScreenName string) (*model.Tweet, error) {
 	anacondaTweet, err := api.PostTweet(toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName), nil)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func PostQuoteTweet(api *anaconda.TwitterApi, text string, quotedTweetIDStr, quo
 	return ToTweet(&anacondaTweet), nil
 }
 
-func PostReply(api *anaconda.TwitterApi, text, toTweetIDStr string, toScreenNames []string) (*twitter.Tweet, error) {
+func PostReply(api *anaconda.TwitterApi, text, toTweetIDStr string, toScreenNames []string) (*model.Tweet, error) {
 	v := url.Values{}
 	v.Set("in_reply_to_status_id", toTweetIDStr)
 	var mentions []string
@@ -60,7 +60,7 @@ func PostReplyWithQuote(
 	quotedTweetUserScreenName string,
 	toTweetIDStr string,
 	toScreenNames []string,
-) (*twitter.Tweet, error) {
+) (*model.Tweet, error) {
 	quotedTweetText := toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName)
 	return PostReply(api, quotedTweetText, toTweetIDStr, toScreenNames)
 

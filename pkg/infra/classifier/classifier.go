@@ -1,22 +1,24 @@
 package classifier
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
+	"strconv"
+
+	"github.com/mpppk/sutaba-server/pkg/util"
+
+	"github.com/mpppk/sutaba-server/pkg/application/repository"
 
 	"golang.org/x/xerrors"
 )
 
-type Classifier struct {
+type ImageClassifyServerRepository struct {
 	host string
 }
 
-func NewClassifier(host string) *Classifier {
-	return &Classifier{
+func NewImageClassifierServerRepository(host string) *ImageClassifyServerRepository {
+	return &ImageClassifyServerRepository{
 		host: host,
 	}
 }
@@ -26,8 +28,8 @@ type ImagePredictResponse struct {
 	Confidence string `json:"confidence"`
 }
 
-func (c *Classifier) Predict(imageBytes []byte) (*ImagePredictResponse, error) {
-	body, contentType, err := generateMultipartFormBody(imageBytes)
+func (c *ImageClassifyServerRepository) Do(imageBytes []byte) (*repository.ClassifyResult, error) {
+	body, contentType, err := util.GenerateMultipartFormBody(imageBytes)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create multipart form: %w", err)
 	}
@@ -47,27 +49,13 @@ func (c *Classifier) Predict(imageBytes []byte) (*ImagePredictResponse, error) {
 		return nil, xerrors.Errorf("failed to close predict response body: %w", err)
 	}
 
-	return &predict, nil
-}
-
-func generateMultipartFormBody(data []byte) (*bytes.Buffer, string, error) {
-	dataBuffer := bytes.NewBuffer(data)
-	body := &bytes.Buffer{}
-	mw := multipart.NewWriter(body)
-
-	fw, err := mw.CreateFormFile("file", "image")
-
-	// fwで作ったパートにファイルのデータを書き込む
-	if _, err = io.Copy(fw, dataBuffer); err != nil {
-		return nil, "", xerrors.Errorf("failed to copy image bytes to multipart form: %w", err)
+	conf, err := strconv.ParseFloat(predict.Confidence, 32)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to parse confidence(%s) to float: %w", predict.Confidence)
 	}
-
-	// リクエストのContent-Typeヘッダに使う値を取得する（バウンダリを含む）
-	contentType := mw.FormDataContentType()
-
-	// 書き込みが終わったので最終のバウンダリを入れる
-	if err = mw.Close(); err != nil {
-		return nil, "", xerrors.Errorf("failed to close multipart writer: %w", err)
+	result := &repository.ClassifyResult{
+		Class:      predict.Pred,
+		Confidence: conf,
 	}
-	return body, contentType, nil
+	return result, nil
 }

@@ -1,9 +1,8 @@
 package twitter
 
 import (
-	"github.com/mpppk/sutaba-server/pkg/domain/twitter"
-
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 	"github.com/mpppk/sutaba-server/pkg/util"
 )
 
@@ -35,15 +34,15 @@ func NewUser(
 	}
 }
 
-func (u *User) PostQuoteTweet(text string, quotedTweetIDStr, quotedTweetUserID string) (*twitter.Tweet, error) {
+func (u *User) PostQuoteTweet(text string, quotedTweetIDStr, quotedTweetUserID string) (*model.Tweet, error) {
 	return PostQuoteTweet(u.Client, text, quotedTweetIDStr, quotedTweetUserID)
 }
 
-func (u *User) PostReply(text, toTweetIDStr string, toScreenNames []string) (*twitter.Tweet, error) {
+func (u *User) PostReply(text, toTweetIDStr string, toScreenNames []string) (*model.Tweet, error) {
 	return PostReply(u.Client, text, toTweetIDStr, toScreenNames)
 }
 
-func (u *User) PostReplyWithQuote(text string, quotedTweetIDStr, quotedTweetUserScreenName, toTweetIDStr string, toScreenNames []string) (*twitter.Tweet, error) {
+func (u *User) PostReplyWithQuote(text string, quotedTweetIDStr, quotedTweetUserScreenName, toTweetIDStr string, toScreenNames []string) (*model.Tweet, error) {
 	return PostReplyWithQuote(u.Client, text, quotedTweetIDStr, quotedTweetUserScreenName, toTweetIDStr, toScreenNames)
 }
 
@@ -56,8 +55,8 @@ func (u *User) PostErrorTweet(notifyText, sorryText, toSorryTweetIDStr, toSorryU
 	}
 }
 
-func toUser(anacondaUser *anaconda.User) *twitter.TwitterUser {
-	return &twitter.TwitterUser{
+func toUser(anacondaUser *anaconda.User) *model.TwitterUser {
+	return &model.TwitterUser{
 		ID:         anacondaUser.Id,
 		ScreenName: anacondaUser.ScreenName,
 	}

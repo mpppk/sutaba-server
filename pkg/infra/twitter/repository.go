@@ -1,7 +1,7 @@
 package twitter
 
 import (
-	"github.com/mpppk/sutaba-server/pkg/domain/twitter"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 	"golang.org/x/xerrors"
 )
 
@@ -21,7 +21,7 @@ func NewRepository(consumerKey, consumerSecret, accessToken, accessTokenSecret s
 	}
 }
 
-func (r *Repository) Post(user twitter.TwitterUser, tweetText string) (*twitter.Tweet, error) {
+func (r *Repository) Post(user model.TwitterUser, tweetText string) (*model.Tweet, error) {
 	twitterUser := r.newUser(user.ID)
 	postedTweet, err := twitterUser.Client.PostTweet(tweetText, nil)
 	if err != nil {
@@ -30,7 +30,7 @@ func (r *Repository) Post(user twitter.TwitterUser, tweetText string) (*twitter.
 	return ToTweet(&postedTweet), nil
 }
 
-func (r *Repository) Reply(fromUser, toUser twitter.TwitterUser, toTweetIDStr, tweetText string) (*twitter.Tweet, error) {
+func (r *Repository) Reply(fromUser, toUser model.TwitterUser, toTweetIDStr, tweetText string) (*model.Tweet, error) {
 	fromTwitterUser := r.newUser(fromUser.ID)
 	postedTweet, err := fromTwitterUser.PostReply(tweetText, toTweetIDStr, []string{toUser.ScreenName}) // FIXME toUserのIDがtwitterのIDとは限らない
 	if err != nil {
@@ -39,7 +39,7 @@ func (r *Repository) Reply(fromUser, toUser twitter.TwitterUser, toTweetIDStr, t
 	return postedTweet, nil
 }
 
-func (r *Repository) ReplyWithQuote(fromUser, toUser twitter.TwitterUser, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName, text string) (*twitter.Tweet, error) {
+func (r *Repository) ReplyWithQuote(fromUser, toUser model.TwitterUser, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName, text string) (*model.Tweet, error) {
 	fromTwitterUser := r.newUser(fromUser.ID)
 	postedTweet, err := fromTwitterUser.PostReplyWithQuote(text, quotedTweetIDStr, quotedTweetUserScreenName, toTweetIDStr, []string{toUser.ScreenName}) // FIXME toUserのIDがtwitterのIDとは限らない
 	if err != nil {

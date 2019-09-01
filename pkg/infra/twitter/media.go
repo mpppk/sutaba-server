@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mpppk/sutaba-server/pkg/domain/twitter"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	"github.com/mpppk/sutaba-server/pkg/util"
 
@@ -68,7 +68,7 @@ func DownloadEntityMediaFromTweet(tweet *anaconda.Tweet, retryNum, retryInterval
 	return DownloadEntityMedia(media, retryNum, retryInterval)
 }
 
-func DownloadMediaFromTweet(tweet *twitter.Tweet, retryNum, retryInterval int) ([]byte, error) {
+func DownloadMediaFromTweet(tweet *model.Tweet, retryNum, retryInterval int) ([]byte, error) {
 	if len(tweet.MediaURLs) == 0 {
 		return nil, errors.New("tweet has no media")
 	}

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mpppk/sutaba-server/pkg/registry"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
-	twitter2 "github.com/mpppk/sutaba-server/pkg/domain/twitter"
+	"github.com/mpppk/sutaba-server/pkg/registry"
 
 	usecase2 "github.com/mpppk/sutaba-server/pkg/application/usecase"
 
@@ -21,7 +21,7 @@ import (
 )
 
 type PredictHandlerConfig struct {
-	SendUser             *twitter2.TwitterUser
+	SendUser             *model.TwitterUser
 	ClassifierServerHost string
 	ErrorTweetMessage    string
 	SorryTweetMessage    string
@@ -54,7 +54,7 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 		usecase := usecase2.NewPostPredictTweetUsecase(&usecase2.PostPredictTweetUseCaseConfig{
 			TwitterRepository: conf.Repository.NewTwitterRepository(),
 			SendUser:          *conf.SendUser,
-			ClassifierClient:  classifier.NewClassifier(conf.ClassifierServerHost),
+			ClassifierClient:  classifier.NewImageClassifierServerRepository(conf.ClassifierServerHost),
 			ErrorTweetMessage: conf.ErrorTweetMessage,
 			SorryTweetMessage: conf.SorryTweetMessage,
 		})
