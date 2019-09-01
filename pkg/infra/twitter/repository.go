@@ -12,6 +12,10 @@ type Repository struct {
 	accessTokenSecret string
 }
 
+func (r *Repository) DownloadMediaFromTweet(tweet *model.Tweet, retryNum, retryInterval int) ([]byte, error) {
+	return downloadMediaFromTweet(tweet, retryNum, retryInterval)
+}
+
 func NewRepository(consumerKey, consumerSecret, accessToken, accessTokenSecret string) *Repository {
 	return &Repository{
 		consumerKey:       consumerKey,

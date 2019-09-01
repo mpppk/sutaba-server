@@ -14,8 +14,6 @@ import (
 	"github.com/mpppk/sutaba-server/pkg/domain/message"
 
 	"golang.org/x/xerrors"
-
-	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
 )
 
 type PostPredictTweetUseCaseConfig struct {
@@ -130,7 +128,7 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (*model.Tweet,
 }
 
 func (p *PostPredictTweetUseCase) tweetToPredText(tweet *model.Tweet) (string, error) {
-	mediaBytes, err := twitter.DownloadMediaFromTweet(tweet, 3, 1)
+	mediaBytes, err := p.twitterRepository.DownloadMediaFromTweet(tweet, 3, 1)
 	if err != nil {
 		return "", err
 	}
