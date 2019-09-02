@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
@@ -11,8 +10,6 @@ import (
 	"github.com/mpppk/sutaba-server/pkg/registry"
 
 	"github.com/mpppk/sutaba-server/pkg/infra/handler"
-
-	"github.com/mpppk/sutaba-server/pkg/util"
 
 	"github.com/spf13/viper"
 
@@ -27,11 +24,6 @@ import (
 
 	"github.com/spf13/cobra"
 )
-
-func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
-	util.LogPrintfInOneLine("Request Body: %v\n", strings.Replace(string(reqBody), "\n", " ", -1))
-	util.LogPrintfInOneLine("Response Body: %v\n", strings.Replace(string(resBody), "\n", " ", -1))
-}
 
 func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 	cmd := &cobra.Command{
@@ -71,7 +63,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 			}
 
 			e := echo.New()
-			e.Use(middleware.BodyDump(bodyDumpHandler))
+			e.Use(middleware.BodyDump(handler.BodyDumpHandler))
 
 			endpoint := "/twitter/aaa"
 			e.GET(endpoint, twitter.GenerateCRCTestHandler(conf.TwitterConsumerSecret))

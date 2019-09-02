@@ -13,10 +13,13 @@ func ToTweet(anacondaTweet *anaconda.Tweet) *model.Tweet {
 	}
 
 	tweet := &model.Tweet{
-		ID:        anacondaTweet.Id,
-		User:      *toUser(&anacondaTweet.User),
-		Text:      anacondaTweet.Text,
-		MediaURLs: mediaURLs,
+		ID:                  anacondaTweet.Id,
+		User:                *toUser(&anacondaTweet.User),
+		Text:                anacondaTweet.Text,
+		MediaURLs:           mediaURLs,
+		InReplyToUserID:     anacondaTweet.InReplyToUserID,
+		InReplyToStatusID:   anacondaTweet.InReplyToStatusID,
+		InReplyToScreenName: anacondaTweet.InReplyToScreenName,
 	}
 
 	if anacondaTweet.InReplyToStatusID != 0 {
