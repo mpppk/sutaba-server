@@ -18,8 +18,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type PostPredictTweetUseCaseConfig struct {
-	SendUser             model.TwitterUser
+type PredictTweetMediaUseCase interface {
+	Handle(forUserIDStr string, tweet *model.Tweet) (string, error)
+}
+
+type PredictTweetMediaInteractorConfig struct {
+	BotUser              model.TwitterUser
 	TargetKeyword        string
 	ErrorTweetMessage    string
 	SorryTweetMessage    string
@@ -28,21 +32,21 @@ type PostPredictTweetUseCaseConfig struct {
 	MessageConverter     output.MessageConverter
 }
 
-type PostPredictTweetUseCase struct {
-	conf             *PostPredictTweetUseCaseConfig
-	twitterPresenter output.MessagePresenter
+type PredictTweetMediaInteractor struct {
+	conf             *PredictTweetMediaInteractorConfig
+	messagePresenter output.MessagePresenter
 	messageConverter output.MessageConverter
 }
 
-func NewPostPredictTweetUsecase(conf *PostPredictTweetUseCaseConfig) *PostPredictTweetUseCase {
-	return &PostPredictTweetUseCase{
+func NewPredictTweetMediaInteractor(conf *PredictTweetMediaInteractorConfig) *PredictTweetMediaInteractor {
+	return &PredictTweetMediaInteractor{
 		conf:             conf,
-		twitterPresenter: conf.TwitterPresenter,
+		messagePresenter: conf.TwitterPresenter,
 		messageConverter: conf.MessageConverter,
 	}
 }
 
-func (p *PostPredictTweetUseCase) isTargetTweet(tweet *model.Tweet) (bool, string) {
+func (p *PredictTweetMediaInteractor) isTargetTweet(tweet *model.Tweet) (bool, string) {
 	if len(tweet.MediaURLs) == 0 {
 		return false, "tweet is ignored because it has no media"
 	}
@@ -50,21 +54,25 @@ func (p *PostPredictTweetUseCase) isTargetTweet(tweet *model.Tweet) (bool, strin
 		return false, "tweet is ignored because it has no keyword"
 	}
 
-	if tweet.User.ID == p.conf.SendUser.ID {
+	if tweet.User.ID == p.conf.BotUser.ID {
 		return false, "tweet is ignored because it is sent by bot"
 	}
 	return true, ""
 }
 
-func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (string, error) {
+func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, tweet *model.Tweet) (string, error) {
+	if forUserIDStr != p.conf.BotUser.GetIDStr() { // FIXME: this is business logic
+		return "anacondaTweet is ignored because event is not for bot", nil
+	}
+
 	ok, reason := p.isTargetTweet(tweet)
 	if ok {
 		f := func() error {
-			tweetText, err := p.tweetToPredText(tweet)
+			tweetText, err := p.convertTweetToMessage(tweet)
 			if err != nil {
 				return err
 			}
-			return p.twitterPresenter.ReplyWithQuote(
+			return p.messagePresenter.ReplyWithQuote(
 				tweet.User,
 				tweet.GetIDStr(),
 				tweet.GetIDStr(),
@@ -74,16 +82,8 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (string, error
 		}
 		err := f()
 		if err != nil {
-			errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-
-			if err := p.twitterPresenter.Post(p.conf.SendUser, errTweetText); err != nil {
-				util.LogPrintlnInOneLine("failed to tweet error notify message", err)
-			}
-
-			if err := p.twitterPresenter.Post(p.conf.SendUser, p.conf.SorryTweetMessage); err != nil {
-				util.LogPrintlnInOneLine("failed to tweet error notify message", err)
-			}
-			return "", xerrors.Errorf("error occurred in ReplyToUser: %w", err)
+			p.notifyError(err)
+			return "", xerrors.Errorf("error occurred in Handle: %w", err)
 		}
 		return "", nil
 	}
@@ -98,12 +98,12 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (string, error
 		return reason + ", and " + quoteReason, nil
 	}
 	f := func() error {
-		tweetText, err := p.tweetToPredText(tweet.QuoteTweet)
+		tweetText, err := p.convertTweetToMessage(tweet.QuoteTweet)
 		if err != nil {
 			return err
 		}
 
-		err = p.twitterPresenter.ReplyWithQuote(
+		err = p.messagePresenter.ReplyWithQuote(
 			tweet.User,
 			tweet.GetIDStr(),
 			tweet.QuoteTweet.GetIDStr(),
@@ -118,20 +118,13 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (string, error
 	}
 	err := f()
 	if err != nil {
-		errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-		if err := p.twitterPresenter.Post(p.conf.SendUser, errTweetText); err != nil {
-			util.LogPrintlnInOneLine("failed to tweet error notify message", err)
-		}
-
-		if err := p.twitterPresenter.Post(p.conf.SendUser, p.conf.SorryTweetMessage); err != nil {
-			util.LogPrintlnInOneLine("failed to tweet error notify message", err)
-		}
+		p.notifyError(err)
 		return "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
 	}
 	return "", nil
 }
 
-func (p *PostPredictTweetUseCase) tweetToPredText(tweet *model.Tweet) (string, error) {
+func (p *PredictTweetMediaInteractor) convertTweetToMessage(tweet *model.Tweet) (string, error) {
 	mediaBytes, err := service.DownloadMediaFromTweet(tweet, 3, 1)
 	if err != nil {
 		return "", err
@@ -147,4 +140,15 @@ func (p *PostPredictTweetUseCase) tweetToPredText(tweet *model.Tweet) (string, e
 		return "", xerrors.Errorf("failed to convert classifyResult result to tweet text: %v", err)
 	}
 	return tweetText, err
+}
+
+func (p *PredictTweetMediaInteractor) notifyError(err error) {
+	errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
+	if err := p.messagePresenter.Post(p.conf.BotUser, errTweetText); err != nil {
+		util.LogPrintlnInOneLine("failed to tweet error notify message", err)
+	}
+
+	if err := p.messagePresenter.Post(p.conf.BotUser, p.conf.SorryTweetMessage); err != nil {
+		util.LogPrintlnInOneLine("failed to tweet error notify message", err)
+	}
 }

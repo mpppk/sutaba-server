@@ -5,6 +5,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/interface/controller"
+
+	"github.com/mpppk/sutaba-server/pkg/application/usecase"
+
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	"github.com/mpppk/sutaba-server/pkg/registry"
@@ -52,14 +56,21 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				View: registry.NewView(viewConfig).NewMessageView(),
 			}
 			converterConfig := &registry.ConverterConfig{}
-			predictHandlerConfig := &handler.PredictHandlerConfig{
-				SendUser:             &user,
-				ClassifierServerHost: conf.ClassifierServerHost,
+			predictTweetMediaInteractor := usecase.NewPredictTweetMediaInteractor(&usecase.PredictTweetMediaInteractorConfig{
+				TwitterPresenter:     registry.NewPresenter(presenterConfig).NewMessagePresenter(),
+				MessageConverter:     registry.NewConverter(converterConfig).NewMessageConverter(),
+				BotUser:              user,
+				ClassifierRepository: registry.NewRepository(repositoryConfig).NewImageClassifierRepository(),
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
 				SorryTweetMessage:    conf.SorryTweetMessage,
-				Repository:           registry.NewRepository(repositoryConfig),
-				Presenter:            registry.NewPresenter(presenterConfig),
-				Converter:            registry.NewConverter(converterConfig),
+			})
+			tweetClassificationControllerConfig := &controller.TweetClassificationControllerConfig{
+				BotUser:                  &user,
+				PredictTweetMediaUseCase: predictTweetMediaInteractor,
+			}
+
+			predictHandlerConfig := &handler.PredictHandlerConfig{
+				TweetClassificationController: controller.NewTweetClassificationController(tweetClassificationControllerConfig),
 			}
 
 			e := echo.New()
