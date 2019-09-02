@@ -44,21 +44,30 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				return err
 			}
 
-			user := model.NewTwitterUser(conf.BotTwitterUserID, "sutaba_police2")
+			user := model.NewTwitterUser(conf.BotTwitterUserID, "sutaba_police2") // FIXME
 
 			repositoryConfig := &registry.RepositoryConfig{
-				ConsumerKey:          conf.TwitterConsumerKey,
-				ConsumerSecret:       conf.TwitterConsumerSecret,
-				AccessToken:          conf.BotTwitterAccessToken,
-				AccessTokenSecret:    conf.BotTwitterAccessTokenSecret,
 				ClassifierServerHost: conf.ClassifierServerHost,
 			}
+			viewConfig := &registry.ViewConfig{
+				ConsumerKey:       conf.TwitterConsumerKey,
+				ConsumerSecret:    conf.TwitterConsumerSecret,
+				AccessToken:       conf.BotTwitterAccessToken,
+				AccessTokenSecret: conf.BotTwitterAccessTokenSecret,
+			}
+
+			presenterConfig := &registry.PresenterConfig{
+				View: registry.NewView(viewConfig).NewMessageView(),
+			}
+			converterConfig := &registry.ConverterConfig{}
 			predictHandlerConfig := &handler.PredictHandlerConfig{
 				SendUser:             &user,
 				ClassifierServerHost: conf.ClassifierServerHost,
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
 				SorryTweetMessage:    conf.SorryTweetMessage,
 				Repository:           registry.NewRepository(repositoryConfig),
+				Presenter:            registry.NewPresenter(presenterConfig),
+				Converter:            registry.NewConverter(converterConfig),
 			}
 
 			e := echo.New()

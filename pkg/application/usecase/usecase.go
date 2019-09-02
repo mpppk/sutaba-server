@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/application/service"
+
 	"github.com/mpppk/sutaba-server/pkg/application/output"
 
 	"github.com/mpppk/sutaba-server/pkg/application/repository"
@@ -21,22 +23,22 @@ type PostPredictTweetUseCaseConfig struct {
 	TargetKeyword        string
 	ErrorTweetMessage    string
 	SorryTweetMessage    string
-	TwitterRepository    repository.TwitterRepository
+	TwitterPresenter     output.MessagePresenter
 	ClassifierRepository repository.ImageClassifierRepository
 	MessageConverter     output.MessageConverter
 }
 
 type PostPredictTweetUseCase struct {
-	conf              *PostPredictTweetUseCaseConfig
-	twitterRepository repository.TwitterRepository
-	messageConverter  output.MessageConverter
+	conf             *PostPredictTweetUseCaseConfig
+	twitterPresenter output.MessagePresenter
+	messageConverter output.MessageConverter
 }
 
 func NewPostPredictTweetUsecase(conf *PostPredictTweetUseCaseConfig) *PostPredictTweetUseCase {
 	return &PostPredictTweetUseCase{
-		conf:              conf,
-		twitterRepository: conf.TwitterRepository,
-		messageConverter:  conf.MessageConverter,
+		conf:             conf,
+		twitterPresenter: conf.TwitterPresenter,
+		messageConverter: conf.MessageConverter,
 	}
 }
 
@@ -54,16 +56,15 @@ func (p *PostPredictTweetUseCase) isTargetTweet(tweet *model.Tweet) (bool, strin
 	return true, ""
 }
 
-func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (*model.Tweet, string, error) {
+func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (string, error) {
 	ok, reason := p.isTargetTweet(tweet)
 	if ok {
-		f := func() (*model.Tweet, error) {
+		f := func() error {
 			tweetText, err := p.tweetToPredText(tweet)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			return p.twitterRepository.ReplyWithQuote(
-				p.conf.SendUser,
+			return p.twitterPresenter.ReplyWithQuote(
 				tweet.User,
 				tweet.GetIDStr(),
 				tweet.GetIDStr(),
@@ -71,67 +72,67 @@ func (p *PostPredictTweetUseCase) ReplyToUser(tweet *model.Tweet) (*model.Tweet,
 				tweetText,
 			)
 		}
-		postedTweet, err := f()
+		err := f()
 		if err != nil {
 			errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
 
-			if _, err := p.twitterRepository.Post(p.conf.SendUser, errTweetText); err != nil {
+			if err := p.twitterPresenter.Post(p.conf.SendUser, errTweetText); err != nil {
 				util.LogPrintlnInOneLine("failed to tweet error notify message", err)
 			}
 
-			if _, err := p.twitterRepository.Post(p.conf.SendUser, p.conf.SorryTweetMessage); err != nil {
+			if err := p.twitterPresenter.Post(p.conf.SendUser, p.conf.SorryTweetMessage); err != nil {
 				util.LogPrintlnInOneLine("failed to tweet error notify message", err)
 			}
-			return nil, "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
+			return "", xerrors.Errorf("error occurred in ReplyToUser: %w", err)
 		}
-		return postedTweet, "", nil
+		return "", nil
 	}
 
 	if !tweet.HasQuoteTweet() {
-		return nil, reason, nil
+		return reason, nil
 	}
 
 	// Check quote tweet
 	ok, quoteReason := p.isTargetTweet(tweet.QuoteTweet)
 	if !ok {
-		return nil, reason + ", and " + quoteReason, nil
+		return reason + ", and " + quoteReason, nil
 	}
-	f := func() (*model.Tweet, error) {
+	f := func() error {
 		tweetText, err := p.tweetToPredText(tweet.QuoteTweet)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		postedTweet, err := p.twitterRepository.ReplyWithQuote(
-			p.conf.SendUser,
+
+		err = p.twitterPresenter.ReplyWithQuote(
 			tweet.User,
 			tweet.GetIDStr(),
 			tweet.QuoteTweet.GetIDStr(),
 			tweet.QuoteTweet.User.ScreenName,
 			tweetText,
 		)
-
 		if err != nil {
-			return nil, xerrors.Errorf("failed to post tweet: %v", err)
+			return xerrors.Errorf("failed to post tweet: %v", err)
 		}
-		return postedTweet, nil
+
+		return nil
 	}
-	postedTweet, err := f()
+	err := f()
 	if err != nil {
 		errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-		if _, err := p.twitterRepository.Post(p.conf.SendUser, errTweetText); err != nil {
+		if err := p.twitterPresenter.Post(p.conf.SendUser, errTweetText); err != nil {
 			util.LogPrintlnInOneLine("failed to tweet error notify message", err)
 		}
 
-		if _, err := p.twitterRepository.Post(p.conf.SendUser, p.conf.SorryTweetMessage); err != nil {
+		if err := p.twitterPresenter.Post(p.conf.SendUser, p.conf.SorryTweetMessage); err != nil {
 			util.LogPrintlnInOneLine("failed to tweet error notify message", err)
 		}
-		return nil, "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
+		return "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
 	}
-	return postedTweet, "", nil
+	return "", nil
 }
 
 func (p *PostPredictTweetUseCase) tweetToPredText(tweet *model.Tweet) (string, error) {
-	mediaBytes, err := p.twitterRepository.DownloadMediaFromTweet(tweet, 3, 1)
+	mediaBytes, err := service.DownloadMediaFromTweet(tweet, 3, 1)
 	if err != nil {
 		return "", err
 	}

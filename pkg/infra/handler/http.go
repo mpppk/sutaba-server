@@ -26,6 +26,8 @@ type PredictHandlerConfig struct {
 	ErrorTweetMessage    string
 	SorryTweetMessage    string
 	Repository           registry.Repository
+	Presenter            registry.Presenter
+	Converter            registry.Converter
 }
 
 func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) error {
@@ -52,11 +54,12 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 		}
 
 		usecase := usecase2.NewPostPredictTweetUsecase(&usecase2.PostPredictTweetUseCaseConfig{
-			TwitterRepository: conf.Repository.NewTwitterRepository(),
-			SendUser:          *conf.SendUser,
-			ClassifierClient:  classifier.NewImageClassifierServerRepository(conf.ClassifierServerHost),
-			ErrorTweetMessage: conf.ErrorTweetMessage,
-			SorryTweetMessage: conf.SorryTweetMessage,
+			TwitterPresenter:     conf.Presenter.NewMessagePresenter(),
+			MessageConverter:     conf.Converter.NewMessageConverter(),
+			SendUser:             *conf.SendUser,
+			ClassifierRepository: classifier.NewImageClassifierServerRepository(conf.ClassifierServerHost),
+			ErrorTweetMessage:    conf.ErrorTweetMessage,
+			SorryTweetMessage:    conf.SorryTweetMessage,
 		})
 		tweets := events.TweetCreateEvents
 		for _, anacondaTweet := range tweets {
@@ -65,7 +68,7 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 				continue
 			}
 			tweet := twitter.ToTweet(anacondaTweet)
-			postedTweet, ignoreReason, err := usecase.ReplyToUser(tweet)
+			ignoreReason, err := usecase.ReplyToUser(tweet)
 			if err != nil {
 				util.LogPrintfInOneLine("error occurred: %v", err)
 				return c.String(http.StatusInternalServerError, fmt.Sprintf(`{"error": "%s"}`, err))
@@ -73,10 +76,6 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 
 			if ignoreReason != "" {
 				util.LogPrintfInOneLine("anacondaTweet is ignored. reason: %v", ignoreReason)
-			}
-
-			if postedTweet != nil {
-				util.LogPrintfInOneLine("posted anacondaTweet: %v", postedTweet)
 			}
 		}
 
