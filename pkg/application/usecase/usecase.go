@@ -29,20 +29,17 @@ type PredictTweetMediaInteractorConfig struct {
 	SorryTweetMessage    string
 	TwitterPresenter     output.MessagePresenter
 	ClassifierRepository repository.ImageClassifierRepository
-	MessageConverter     output.MessageConverter
 }
 
 type PredictTweetMediaInteractor struct {
 	conf             *PredictTweetMediaInteractorConfig
 	messagePresenter output.MessagePresenter
-	messageConverter output.MessageConverter
 }
 
 func NewPredictTweetMediaInteractor(conf *PredictTweetMediaInteractorConfig) *PredictTweetMediaInteractor {
 	return &PredictTweetMediaInteractor{
 		conf:             conf,
 		messagePresenter: conf.TwitterPresenter,
-		messageConverter: conf.MessageConverter,
 	}
 }
 
@@ -68,7 +65,7 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, tweet *model.T
 	ok, reason := p.isTargetTweet(tweet)
 	if ok {
 		f := func() error {
-			tweetText, err := p.convertTweetToMessage(tweet)
+			tweetText, err := p.predictTweetMedia(tweet)
 			if err != nil {
 				return err
 			}
@@ -98,7 +95,7 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, tweet *model.T
 		return reason + ", and " + quoteReason, nil
 	}
 	f := func() error {
-		tweetText, err := p.convertTweetToMessage(tweet.QuoteTweet)
+		tweetText, err := p.predictTweetMedia(tweet.QuoteTweet)
 		if err != nil {
 			return err
 		}
@@ -124,31 +121,27 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, tweet *model.T
 	return "", nil
 }
 
-func (p *PredictTweetMediaInteractor) convertTweetToMessage(tweet *model.Tweet) (string, error) {
+func (p *PredictTweetMediaInteractor) predictTweetMedia(tweet *model.Tweet) (*repository.ClassifyResult, error) {
 	mediaBytes, err := service.DownloadMediaFromTweet(tweet, 3, 1)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	classifyResult, err := p.conf.ClassifierRepository.Do(mediaBytes)
 	if err != nil {
-		return "", xerrors.Errorf("failed to classifyResult: %v", err)
+		return nil, xerrors.Errorf("failed to classifyResult: %v", err)
 	}
 
-	tweetText, err := p.messageConverter.GenerateResultMessage(classifyResult)
-	if err != nil {
-		return "", xerrors.Errorf("failed to convert classifyResult result to tweet text: %v", err)
-	}
-	return tweetText, err
+	return classifyResult, err
 }
 
 func (p *PredictTweetMediaInteractor) notifyError(err error) {
 	errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-	if err := p.messagePresenter.Post(p.conf.BotUser, errTweetText); err != nil {
+	if err := p.messagePresenter.PostText(p.conf.BotUser, errTweetText); err != nil {
 		util.LogPrintlnInOneLine("failed to tweet error notify message", err)
 	}
 
-	if err := p.messagePresenter.Post(p.conf.BotUser, p.conf.SorryTweetMessage); err != nil {
+	if err := p.messagePresenter.PostText(p.conf.BotUser, p.conf.SorryTweetMessage); err != nil {
 		util.LogPrintlnInOneLine("failed to tweet error notify message", err)
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mpppk/sutaba-server/pkg/application/repository"
+
 	"github.com/mpppk/sutaba-server/pkg/application/service"
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
 	"github.com/mpppk/sutaba-server/pkg/interface/view"
@@ -24,26 +26,32 @@ func NewPresenter(view view.MessageView) *MessagePresenter {
 	}
 }
 
-func (r *MessagePresenter) Post(user model.TwitterUser, tweetText string) error {
-	if err := r.view.Show(tweetText); err != nil {
+func (r *MessagePresenter) Post(user model.TwitterUser, result *repository.ClassifyResult) error {
+	return r.PostText(user, generateResultMessage(result))
+}
+
+func (r *MessagePresenter) PostText(user model.TwitterUser, text string) error {
+	if err := r.view.Show(text); err != nil {
 		return xerrors.Errorf("failed to post message to Twitter: %w", err)
 	}
 	return nil
 }
 
-func (r *MessagePresenter) Reply(toUser model.TwitterUser, toTweetIDStr, tweetText string) error {
-	newText := toReplyText(tweetText, []string{toUser.ScreenName})
+func (r *MessagePresenter) Reply(toUser model.TwitterUser, toTweetIDStr string, result *repository.ClassifyResult) error {
+	text := generateResultMessage(result)
+	newText := toReplyText(text, []string{toUser.ScreenName})
 	if err := r.view.Reply(newText, &toUser); err != nil {
-		return xerrors.Errorf("failed to post message to Twitter: %w", err)
+		return xerrors.Errorf("failed to reply message on Twitter: %w", err)
 	}
 	return nil
 }
 
-func (r *MessagePresenter) ReplyWithQuote(toUser model.TwitterUser, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName, text string) error {
+func (r *MessagePresenter) ReplyWithQuote(toUser model.TwitterUser, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName string, result *repository.ClassifyResult) error {
+	text := generateResultMessage(result)
 	newText := toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName)
 	newText = toReplyText(newText, []string{toUser.ScreenName})
 	if err := r.view.Reply(newText, &toUser); err != nil {
-		return xerrors.Errorf("failed to post message to Twitter: %w", err)
+		return xerrors.Errorf("failed to reply with quote message on Twitter: %w", err)
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package converter
+package presenter
 
 import (
 	"fmt"
@@ -8,14 +8,12 @@ import (
 	"github.com/mpppk/sutaba-server/pkg/application/repository"
 )
 
-type SutabaPoliceMessageConverter struct{}
-
-func (m *SutabaPoliceMessageConverter) GenerateResultMessage(result *repository.ClassifyResult) (string, error) {
+func generateResultMessage(result *repository.ClassifyResult) string {
 	confidence := float32(result.Confidence)
 	return classAndConfidenceToText(result.Class, confidence)
 }
 
-func classAndConfidenceToText(className string, confidence float32) (string, error) {
+func classAndConfidenceToText(className string, confidence float32) string {
 	predStr := ""
 	switch className {
 	case "sutaba":
@@ -44,7 +42,7 @@ func classAndConfidenceToText(className string, confidence float32) (string, err
 		}
 	}
 
-	return predStr, nil
+	return predStr
 }
 
 func pickRandomStr(texts []string) string {

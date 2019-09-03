@@ -55,10 +55,8 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 			presenterConfig := &registry.PresenterConfig{
 				View: registry.NewView(viewConfig).NewMessageView(),
 			}
-			converterConfig := &registry.ConverterConfig{}
 			predictTweetMediaInteractor := usecase.NewPredictTweetMediaInteractor(&usecase.PredictTweetMediaInteractorConfig{
 				TwitterPresenter:     registry.NewPresenter(presenterConfig).NewMessagePresenter(),
-				MessageConverter:     registry.NewConverter(converterConfig).NewMessageConverter(),
 				BotUser:              user,
 				ClassifierRepository: registry.NewRepository(repositoryConfig).NewImageClassifierRepository(),
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
