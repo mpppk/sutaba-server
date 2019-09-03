@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/mpppk/sutaba-server/pkg/interface/itwitter"
+
 	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
 
 	"github.com/mpppk/sutaba-server/pkg/interface/controller"
-
-	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	"github.com/mpppk/sutaba-server/pkg/util"
 

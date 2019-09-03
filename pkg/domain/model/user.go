@@ -4,18 +4,18 @@ import (
 	"strconv"
 )
 
-type TwitterUser struct {
-	ID         int64 // FIXME do not expose
-	ScreenName string
+type User struct {
+	ID   int64 // FIXME do not expose
+	Name string
 }
 
-func NewTwitterUser(id int64, name string) TwitterUser {
-	return TwitterUser{
-		ID:         id,
-		ScreenName: name,
+func NewTwitterUser(id int64, name string) User {
+	return User{
+		ID:   id,
+		Name: name,
 	}
 }
 
-func (t *TwitterUser) GetIDStr() string {
+func (t *User) GetIDStr() string {
 	return strconv.FormatInt(t.ID, 10)
 }

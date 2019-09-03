@@ -1,13 +1,13 @@
 package registry
 
 import (
-	"github.com/mpppk/sutaba-server/pkg/application/output"
+	"github.com/mpppk/sutaba-server/pkg/application/ipresenter"
 	"github.com/mpppk/sutaba-server/pkg/interface/presenter"
 	"github.com/mpppk/sutaba-server/pkg/interface/view"
 )
 
 type Presenter interface {
-	NewMessagePresenter() output.MessagePresenter
+	NewMessagePresenter() ipresenter.MessagePresenter
 }
 
 type PresenterConfig struct {
@@ -18,7 +18,7 @@ type presenterImpl struct {
 	messagePresenter *presenter.MessagePresenter
 }
 
-func (p *presenterImpl) NewMessagePresenter() output.MessagePresenter {
+func (p *presenterImpl) NewMessagePresenter() ipresenter.MessagePresenter {
 	return p.messagePresenter
 }
 

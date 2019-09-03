@@ -16,7 +16,7 @@ type MessagePresenter struct {
 	view view.MessageView
 }
 
-func (r *MessagePresenter) DownloadMediaFromTweet(tweet *model.Tweet, retryNum, retryInterval int) ([]byte, error) {
+func (r *MessagePresenter) DownloadMediaFromTweet(tweet *model.Message, retryNum, retryInterval int) ([]byte, error) {
 	return service.DownloadMediaFromTweet(tweet, retryNum, retryInterval)
 }
 
@@ -26,30 +26,30 @@ func NewPresenter(view view.MessageView) *MessagePresenter {
 	}
 }
 
-func (r *MessagePresenter) Post(user model.TwitterUser, result *repository.ClassifyResult) error {
+func (r *MessagePresenter) Post(user model.User, result *repository.ClassifyResult) error {
 	return r.PostText(user, generateResultMessage(result))
 }
 
-func (r *MessagePresenter) PostText(user model.TwitterUser, text string) error {
+func (r *MessagePresenter) PostText(user model.User, text string) error {
 	if err := r.view.Show(text); err != nil {
 		return xerrors.Errorf("failed to post message to Twitter: %w", err)
 	}
 	return nil
 }
 
-func (r *MessagePresenter) Reply(toUser model.TwitterUser, toTweetIDStr string, result *repository.ClassifyResult) error {
+func (r *MessagePresenter) Reply(toUser model.User, toTweetIDStr string, result *repository.ClassifyResult) error {
 	text := generateResultMessage(result)
-	newText := toReplyText(text, []string{toUser.ScreenName})
+	newText := toReplyText(text, []string{toUser.Name})
 	if err := r.view.Reply(newText, &toUser); err != nil {
 		return xerrors.Errorf("failed to reply message on Twitter: %w", err)
 	}
 	return nil
 }
 
-func (r *MessagePresenter) ReplyWithQuote(toUser model.TwitterUser, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName string, result *repository.ClassifyResult) error {
+func (r *MessagePresenter) ReplyWithQuote(toUser model.User, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName string, result *repository.ClassifyResult) error {
 	text := generateResultMessage(result)
 	newText := toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName)
-	newText = toReplyText(newText, []string{toUser.ScreenName})
+	newText = toReplyText(newText, []string{toUser.Name})
 	if err := r.view.Reply(newText, &toUser); err != nil {
 		return xerrors.Errorf("failed to reply with quote message on Twitter: %w", err)
 	}

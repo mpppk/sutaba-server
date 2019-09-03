@@ -14,9 +14,9 @@ const (
 	ReplyWithQuote
 )
 
-func toUser(anacondaUser *anaconda.User) *model.TwitterUser {
-	return &model.TwitterUser{
-		ID:         anacondaUser.Id,
-		ScreenName: anacondaUser.ScreenName,
+func toUser(anacondaUser *anaconda.User) *model.User {
+	return &model.User{
+		ID:   anacondaUser.Id,
+		Name: anacondaUser.ScreenName,
 	}
 }

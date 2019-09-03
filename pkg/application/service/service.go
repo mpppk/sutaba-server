@@ -13,7 +13,7 @@ import (
 )
 
 // TODO: ここでいいのか考える
-func DownloadMediaFromTweet(tweet *model.Tweet, retryNum, retryInterval int) ([]byte, error) {
+func DownloadMediaFromTweet(tweet *model.Message, retryNum, retryInterval int) ([]byte, error) {
 	if len(tweet.MediaURLs) == 0 {
 		return nil, errors.New("tweet has no media")
 	}

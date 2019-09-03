@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/interface/itwitter"
+
 	"github.com/mpppk/sutaba-server/pkg/interface/controller"
 
 	"github.com/mpppk/sutaba-server/pkg/application/usecase"
@@ -56,15 +58,18 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				View: registry.NewView(viewConfig).NewMessageView(),
 			}
 			predictTweetMediaInteractor := usecase.NewPredictTweetMediaInteractor(&usecase.PredictTweetMediaInteractorConfig{
-				TwitterPresenter:     registry.NewPresenter(presenterConfig).NewMessagePresenter(),
+				MessagePresenter:     registry.NewPresenter(presenterConfig).NewMessagePresenter(),
 				BotUser:              user,
 				ClassifierRepository: registry.NewRepository(repositoryConfig).NewImageClassifierRepository(),
 				ErrorTweetMessage:    conf.ErrorTweetMessage,
 				SorryTweetMessage:    conf.SorryTweetMessage,
 			})
+
+			tw := itwitter.NewTwitter()
 			tweetClassificationControllerConfig := &controller.TweetClassificationControllerConfig{
 				BotUser:                  &user,
 				PredictTweetMediaUseCase: predictTweetMediaInteractor,
+				Twitter:                  tw,
 			}
 
 			predictHandlerConfig := &handler.PredictHandlerConfig{

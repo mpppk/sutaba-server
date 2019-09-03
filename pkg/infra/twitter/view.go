@@ -14,7 +14,7 @@ func (v *View) Show(text string) error {
 	return err
 }
 
-func (v *View) Reply(text string, user *model.TwitterUser) error {
+func (v *View) Reply(text string, user *model.User) error {
 	_, err := PostReply(v.Client, text, user.GetIDStr())
 	return err
 }
