@@ -2,8 +2,9 @@ package usecase
 
 import (
 	"fmt"
-	"strings"
 	"time"
+
+	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
 
 	"github.com/mpppk/sutaba-server/pkg/application/service"
 
@@ -43,27 +44,12 @@ func NewPredictTweetMediaInteractor(conf *PredictTweetMediaInteractorConfig) *Pr
 	}
 }
 
-func (p *PredictTweetMediaInteractor) isTargetMessage(message *model.Message) (bool, string) {
-	if len(message.MediaURLs) == 0 {
-		return false, "message is ignored because it has no media"
-	}
-	if !strings.Contains(message.Text, p.conf.TargetKeyword) {
-		return false, "message is ignored because it has no keyword"
-	}
-
-	if message.User.ID == p.conf.BotUser.ID {
-		return false, "message is ignored because it is sent by bot"
-	}
-	return true, ""
-}
-
 func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model.Message) (string, error) {
 	if forUserIDStr != p.conf.BotUser.GetIDStr() { // FIXME: this is business logic
 		return "anacondaTweet is ignored because event is not for bot", nil
 	}
 
-	ok, reason := p.isTargetMessage(message)
-	if ok {
+	if reason := domain.IsTargetMessage(&p.conf.BotUser, message, p.conf.TargetKeyword); reason == "" {
 		f := func() error {
 			messageText, err := p.predictMessageMedia(message)
 			if err != nil {
@@ -83,17 +69,15 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 			return "", xerrors.Errorf("error occurred in Handle: %w", err)
 		}
 		return "", nil
-	}
-
-	if !message.HasQuoteTweet() {
+	} else if !message.HasQuoteTweet() {
 		return reason, nil
 	}
 
 	// Check quote message
-	ok, quoteReason := p.isTargetMessage(message.QuoteMessage)
-	if !ok {
-		return reason + ", and " + quoteReason, nil
+	if reason := domain.IsTargetMessage(&p.conf.BotUser, message.QuoteMessage, p.conf.TargetKeyword); reason != "" {
+		return "quoted tweet: " + reason, nil
 	}
+
 	f := func() error {
 		messageText, err := p.predictMessageMedia(message.QuoteMessage)
 		if err != nil {

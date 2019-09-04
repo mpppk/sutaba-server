@@ -43,7 +43,7 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 			return nil
 		}
 
-		var tweets []*model.Tweet
+		var tweets []*itwitter.Tweet
 		for _, anacondaTweet := range events.TweetCreateEvents {
 			tweets = append(tweets, twitter.ToTweet(anacondaTweet))
 		}

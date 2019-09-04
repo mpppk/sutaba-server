@@ -16,6 +16,13 @@ func NewTwitterUser(id int64, name string) User {
 	}
 }
 
-func (t *User) GetIDStr() string {
-	return strconv.FormatInt(t.ID, 10)
+func (u *User) GetIDStr() string {
+	return strconv.FormatInt(u.ID, 10)
+}
+
+func (u *User) IsOwnMessage(message *Message) bool {
+	if message == nil {
+		return false
+	}
+	return message.User.ID == u.ID
 }

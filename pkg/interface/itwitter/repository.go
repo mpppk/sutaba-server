@@ -17,6 +17,11 @@ func NewTwitter() *Twitter {
 }
 
 func (r *Twitter) NewMessage(tweet *Tweet) *model.Message {
+	var medias []*model.MessageMedia
+	for _, mediaURL := range tweet.MediaURLs {
+		medias = append(medias, model.NewMessageMedia(mediaURL))
+	}
+
 	message := &model.Message{
 		ID:                  tweet.ID,
 		User:                tweet.User,
@@ -24,7 +29,7 @@ func (r *Twitter) NewMessage(tweet *Tweet) *model.Message {
 		InReplyToStatusID:   tweet.InReplyToStatusID,
 		InReplyToUserID:     tweet.InReplyToUserID,
 		InReplyToScreenName: tweet.InReplyToScreenName,
-		MediaURLs:           tweet.MediaURLs,
+		Medias:              medias,
 	}
 
 	if tweet.QuoteTweet != nil {

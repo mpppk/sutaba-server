@@ -14,30 +14,30 @@ import (
 
 // TODO: ここでいいのか考える
 func DownloadMediaFromTweet(tweet *model.Message, retryNum, retryInterval int) ([]byte, error) {
-	if len(tweet.MediaURLs) == 0 {
+	if len(tweet.Medias) == 0 {
 		return nil, errors.New("tweet has no media")
 	}
 
-	mediaRawUrl := tweet.MediaURLs[0]
-	mediaUrl, err := url.Parse(mediaRawUrl)
+	media := tweet.Medias[0]
+	mediaUrl, err := url.Parse(media.GetURL())
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse media url(%s): %w", mediaRawUrl, err)
+		return nil, xerrors.Errorf("failed to parse media url(%s): %w", media, err)
 	}
 
 	mediaUrlPaths := strings.Split(mediaUrl.Path, "/")
 	if len(mediaUrlPaths) == 0 {
-		return nil, xerrors.Errorf("invalid mediaUrl: %s", mediaRawUrl)
+		return nil, xerrors.Errorf("invalid mediaUrl: %s", media)
 	}
 
 	cnt := 0
 	for {
-		bytes, err := util.DownloadFile(mediaRawUrl)
+		bytes, err := util.DownloadFile(media.GetURL())
 		if err != nil {
 			if cnt >= retryNum {
-				return nil, xerrors.Errorf("failed to download file from %s (retired %d times): %w", mediaRawUrl, retryNum, err)
+				return nil, xerrors.Errorf("failed to download file from %s (retired %d times): %w", media, retryNum, err)
 			}
 
-			fmt.Println(xerrors.Errorf("failed to download file from %s: %w", mediaRawUrl, err))
+			fmt.Println(xerrors.Errorf("failed to download file from %s: %w", media, err))
 			time.Sleep(time.Duration(retryInterval) * time.Second)
 			cnt++
 			continue
