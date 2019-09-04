@@ -44,7 +44,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 
 			user := model.NewTwitterUser(conf.BotTwitterUserID, "sutaba_police2") // FIXME
 
-			repositoryConfig := &registry.RepositoryConfig{
+			domainServiceConfig := &registry.ServiceConfig{
 				ClassifierServerHost: conf.ClassifierServerHost,
 			}
 			viewConfig := &registry.ViewConfig{
@@ -58,11 +58,11 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				View: registry.NewView(viewConfig).NewMessageView(),
 			}
 			predictTweetMediaInteractor := usecase.NewPredictTweetMediaInteractor(&usecase.PredictTweetMediaInteractorConfig{
-				MessagePresenter:     registry.NewPresenter(presenterConfig).NewMessagePresenter(),
-				BotUser:              user,
-				ClassifierRepository: registry.NewRepository(repositoryConfig).NewImageClassifierRepository(),
-				ErrorTweetMessage:    conf.ErrorTweetMessage,
-				SorryTweetMessage:    conf.SorryTweetMessage,
+				MessagePresenter:  registry.NewPresenter(presenterConfig).NewMessagePresenter(),
+				BotUser:           user,
+				ClassifierService: registry.NewDomainService(domainServiceConfig).NewClassifierService(),
+				ErrorTweetMessage: conf.ErrorTweetMessage,
+				SorryTweetMessage: conf.SorryTweetMessage,
 			})
 
 			tw := itwitter.NewTwitter()

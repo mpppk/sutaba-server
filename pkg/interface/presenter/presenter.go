@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mpppk/sutaba-server/pkg/application/repository"
-
-	"github.com/mpppk/sutaba-server/pkg/application/service"
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
+	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
 	"github.com/mpppk/sutaba-server/pkg/interface/view"
 	"golang.org/x/xerrors"
 )
@@ -16,17 +14,13 @@ type MessagePresenter struct {
 	view view.MessageView
 }
 
-func (r *MessagePresenter) DownloadMediaFromTweet(tweet *model.Message, retryNum, retryInterval int) ([]byte, error) {
-	return service.DownloadMediaFromTweet(tweet, retryNum, retryInterval)
-}
-
 func NewPresenter(view view.MessageView) *MessagePresenter {
 	return &MessagePresenter{
 		view: view,
 	}
 }
 
-func (r *MessagePresenter) Post(user model.User, result *repository.ClassifyResult) error {
+func (r *MessagePresenter) Post(user model.User, result *domain.ClassifyResult) error {
 	return r.PostText(user, generateResultMessage(result))
 }
 
@@ -37,7 +31,7 @@ func (r *MessagePresenter) PostText(user model.User, text string) error {
 	return nil
 }
 
-func (r *MessagePresenter) Reply(toUser model.User, toTweetIDStr string, result *repository.ClassifyResult) error {
+func (r *MessagePresenter) Reply(toUser model.User, toTweetIDStr string, result *domain.ClassifyResult) error {
 	text := generateResultMessage(result)
 	newText := toReplyText(text, []string{toUser.Name})
 	if err := r.view.Reply(newText, &toUser); err != nil {
@@ -46,7 +40,7 @@ func (r *MessagePresenter) Reply(toUser model.User, toTweetIDStr string, result 
 	return nil
 }
 
-func (r *MessagePresenter) ReplyWithQuote(toUser model.User, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName string, result *repository.ClassifyResult) error {
+func (r *MessagePresenter) ReplyWithQuote(toUser model.User, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName string, result *domain.ClassifyResult) error {
 	text := generateResultMessage(result)
 	newText := toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName)
 	newText = toReplyText(newText, []string{toUser.Name})

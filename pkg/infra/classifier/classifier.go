@@ -6,20 +6,28 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mpppk/sutaba-server/pkg/util"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
-	"github.com/mpppk/sutaba-server/pkg/application/repository"
+	"github.com/mpppk/sutaba-server/pkg/application/service"
+
+	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
+
+	"github.com/mpppk/sutaba-server/pkg/util"
 
 	"golang.org/x/xerrors"
 )
 
-type ImageClassifyServerRepository struct {
-	host string
+type ImageClassifyServerService struct {
+	host          string
+	retryNum      int
+	retryInterval int
 }
 
-func NewImageClassifierServerRepository(host string) *ImageClassifyServerRepository {
-	return &ImageClassifyServerRepository{
-		host: host,
+func NewImageClassifierServerService(host string, retryNum, retryInterval int) *ImageClassifyServerService {
+	return &ImageClassifyServerService{
+		host:          host,
+		retryNum:      retryNum,
+		retryInterval: retryInterval,
 	}
 }
 
@@ -28,7 +36,11 @@ type ImagePredictResponse struct {
 	Confidence string `json:"confidence"`
 }
 
-func (c *ImageClassifyServerRepository) Do(imageBytes []byte) (*repository.ClassifyResult, error) {
+func (c *ImageClassifyServerService) Classify(media *model.MessageMedia) (*domain.ClassifyResult, error) {
+	imageBytes, err := service.DownloadMediaFromMessageMedia(media, c.retryNum, c.retryInterval) // FIXME
+	if err != nil {
+		return nil, err
+	}
 	body, contentType, err := util.GenerateMultipartFormBody(imageBytes)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create multipart form: %w", err)
@@ -53,7 +65,7 @@ func (c *ImageClassifyServerRepository) Do(imageBytes []byte) (*repository.Class
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse confidence(%s) to float: %w", predict.Confidence)
 	}
-	result := &repository.ClassifyResult{
+	result := &domain.ClassifyResult{
 		Class:      predict.Pred,
 		Confidence: conf,
 	}

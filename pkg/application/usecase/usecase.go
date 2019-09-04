@@ -6,11 +6,7 @@ import (
 
 	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
 
-	"github.com/mpppk/sutaba-server/pkg/application/service"
-
 	"github.com/mpppk/sutaba-server/pkg/application/ipresenter"
-
-	"github.com/mpppk/sutaba-server/pkg/application/repository"
 
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
@@ -24,23 +20,25 @@ type PredictTweetMediaUseCase interface {
 }
 
 type PredictTweetMediaInteractorConfig struct {
-	BotUser              model.User
-	TargetKeyword        string
-	ErrorTweetMessage    string
-	SorryTweetMessage    string
-	MessagePresenter     ipresenter.MessagePresenter
-	ClassifierRepository repository.ImageClassifierRepository
+	BotUser           model.User
+	TargetKeyword     string
+	ErrorTweetMessage string
+	SorryTweetMessage string
+	MessagePresenter  ipresenter.MessagePresenter
+	ClassifierService domain.ClassifierService
 }
 
 type PredictTweetMediaInteractor struct {
-	conf             *PredictTweetMediaInteractorConfig
-	messagePresenter ipresenter.MessagePresenter
+	conf              *PredictTweetMediaInteractorConfig
+	messagePresenter  ipresenter.MessagePresenter
+	classifierService domain.ClassifierService
 }
 
 func NewPredictTweetMediaInteractor(conf *PredictTweetMediaInteractorConfig) *PredictTweetMediaInteractor {
 	return &PredictTweetMediaInteractor{
-		conf:             conf,
-		messagePresenter: conf.MessagePresenter,
+		conf:              conf,
+		messagePresenter:  conf.MessagePresenter,
+		classifierService: conf.ClassifierService,
 	}
 }
 
@@ -51,16 +49,18 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 
 	if reason := domain.IsTargetMessage(&p.conf.BotUser, message, p.conf.TargetKeyword); reason == "" {
 		f := func() error {
-			messageText, err := p.predictMessageMedia(message)
+			// ignore error because it is ensured that message has one ore more medias by IsTargetMessage
+			media, _ := message.GetFirstMedia()
+			classifyResult, err := p.classifierService.Classify(media)
 			if err != nil {
-				return err
+				return xerrors.Errorf("failed to classifyResult: %v", err)
 			}
 			return p.messagePresenter.ReplyWithQuote(
 				message.User,
 				message.GetIDStr(),
 				message.GetIDStr(),
 				message.User.Name,
-				messageText,
+				classifyResult,
 			)
 		}
 		err := f()
@@ -69,7 +69,7 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 			return "", xerrors.Errorf("error occurred in Handle: %w", err)
 		}
 		return "", nil
-	} else if !message.HasQuoteTweet() {
+	} else if !message.HasMessageRefference() {
 		return reason, nil
 	}
 
@@ -79,19 +79,20 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 	}
 
 	f := func() error {
-		messageText, err := p.predictMessageMedia(message.QuoteMessage)
+		// ignore error because it is ensured that message has one ore more medias by IsTargetMessage
+		media, _ := message.QuoteMessage.GetFirstMedia()
+		classifyResult, err := p.classifierService.Classify(media)
 		if err != nil {
-			return err
+			return xerrors.Errorf("failed to classifyResult: %v", err)
 		}
 
-		err = p.messagePresenter.ReplyWithQuote(
+		if err := p.messagePresenter.ReplyWithQuote(
 			message.User,
 			message.GetIDStr(),
 			message.QuoteMessage.GetIDStr(),
 			message.QuoteMessage.User.Name,
-			messageText,
-		)
-		if err != nil {
+			classifyResult,
+		); err != nil {
 			return xerrors.Errorf("failed to post message: %v", err)
 		}
 
@@ -103,20 +104,6 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 		return "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
 	}
 	return "", nil
-}
-
-func (p *PredictTweetMediaInteractor) predictMessageMedia(message *model.Message) (*repository.ClassifyResult, error) {
-	mediaBytes, err := service.DownloadMediaFromTweet(message, 3, 1)
-	if err != nil {
-		return nil, err
-	}
-
-	classifyResult, err := p.conf.ClassifierRepository.Do(mediaBytes)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to classifyResult: %v", err)
-	}
-
-	return classifyResult, err
 }
 
 func (p *PredictTweetMediaInteractor) notifyError(err error) {

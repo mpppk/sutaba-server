@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -13,12 +12,7 @@ import (
 )
 
 // TODO: ここでいいのか考える
-func DownloadMediaFromTweet(tweet *model.Message, retryNum, retryInterval int) ([]byte, error) {
-	if len(tweet.Medias) == 0 {
-		return nil, errors.New("tweet has no media")
-	}
-
-	media := tweet.Medias[0]
+func DownloadMediaFromMessageMedia(media *model.MessageMedia, retryNum, retryInterval int) ([]byte, error) {
 	mediaUrl, err := url.Parse(media.GetURL())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to parse media url(%s): %w", media, err)

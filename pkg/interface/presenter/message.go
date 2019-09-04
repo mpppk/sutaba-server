@@ -5,10 +5,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/mpppk/sutaba-server/pkg/application/repository"
+	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
 )
 
-func generateResultMessage(result *repository.ClassifyResult) string {
+func generateResultMessage(result *domain.ClassifyResult) string {
 	confidence := float32(result.Confidence)
 	return classAndConfidenceToText(result.Class, confidence)
 }

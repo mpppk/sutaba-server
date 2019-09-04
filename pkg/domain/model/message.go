@@ -38,7 +38,7 @@ func (m *Message) IsReply() bool {
 	return m.InReplyToUserID != 0
 }
 
-func (m *Message) HasQuoteTweet() bool {
+func (m *Message) HasMessageRefference() bool {
 	return m.QuoteMessage != nil
 }
 
