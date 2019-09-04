@@ -11,7 +11,7 @@ type Presenter interface {
 }
 
 type PresenterConfig struct {
-	View view.MessageView
+	View view.TwitterView
 }
 
 type presenterImpl struct {

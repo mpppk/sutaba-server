@@ -11,16 +11,16 @@ import (
 )
 
 type MessagePresenter struct {
-	view view.MessageView
+	view view.TwitterView
 }
 
-func NewPresenter(view view.MessageView) *MessagePresenter {
+func NewPresenter(view view.TwitterView) *MessagePresenter {
 	return &MessagePresenter{
 		view: view,
 	}
 }
 
-func (r *MessagePresenter) Post(user model.User, result *domain.ClassifyResult) error {
+func (r *MessagePresenter) PostResult(user model.User, result *domain.ClassifyResult) error {
 	return r.PostText(user, generateResultMessage(result))
 }
 
@@ -31,21 +31,21 @@ func (r *MessagePresenter) PostText(user model.User, text string) error {
 	return nil
 }
 
-func (r *MessagePresenter) Reply(toUser model.User, toTweetIDStr string, result *domain.ClassifyResult) error {
+func (r *MessagePresenter) ReplyResultToMessage(toUser model.User, message *model.Message, result *domain.ClassifyResult) error {
 	text := generateResultMessage(result)
 	newText := toReplyText(text, []string{toUser.Name})
-	if err := r.view.Reply(newText, &toUser); err != nil {
+	if err := r.view.ReplyToTweet(newText, message.GetIDStr()); err != nil {
 		return xerrors.Errorf("failed to reply message on Twitter: %w", err)
 	}
 	return nil
 }
 
-func (r *MessagePresenter) ReplyWithQuote(toUser model.User, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName string, result *domain.ClassifyResult) error {
+func (r *MessagePresenter) ReplyResultToMessageWithReference(toUser model.User, targetMessage, referredMessage *model.Message, result *domain.ClassifyResult) error {
 	text := generateResultMessage(result)
-	newText := toQuoteTweet(text, quotedTweetIDStr, quotedTweetUserScreenName)
+	newText := toQuoteTweet(text, referredMessage.GetIDStr(), referredMessage.User.Name)
 	newText = toReplyText(newText, []string{toUser.Name})
-	if err := r.view.Reply(newText, &toUser); err != nil {
-		return xerrors.Errorf("failed to reply with quote message on Twitter: %w", err)
+	if err := r.view.ReplyToTweet(newText, targetMessage.GetIDStr()); err != nil {
+		return xerrors.Errorf("failed to reply with reference message on Twitter: %w", err)
 	}
 	return nil
 }

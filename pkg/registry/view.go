@@ -6,7 +6,7 @@ import (
 )
 
 type View interface {
-	NewMessageView() view.MessageView
+	NewMessageView() view.TwitterView
 }
 
 type ViewConfig struct {
@@ -20,7 +20,7 @@ type viewImpl struct {
 	twitterView *twitter.View
 }
 
-func (p *viewImpl) NewMessageView() view.MessageView {
+func (p *viewImpl) NewMessageView() view.TwitterView {
 	return p.twitterView
 }
 

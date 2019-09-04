@@ -55,11 +55,10 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 			if err != nil {
 				return xerrors.Errorf("failed to classifyResult: %v", err)
 			}
-			return p.messagePresenter.ReplyWithQuote(
+			return p.messagePresenter.ReplyResultToMessageWithReference(
 				message.User,
-				message.GetIDStr(),
-				message.GetIDStr(),
-				message.User.Name,
+				message,
+				message,
 				classifyResult,
 			)
 		}
@@ -86,11 +85,10 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 			return xerrors.Errorf("failed to classifyResult: %v", err)
 		}
 
-		if err := p.messagePresenter.ReplyWithQuote(
+		if err := p.messagePresenter.ReplyResultToMessageWithReference(
 			message.User,
-			message.GetIDStr(),
-			message.ReferencedMessage.GetIDStr(),
-			message.ReferencedMessage.User.Name,
+			message,
+			message.ReferencedMessage,
 			classifyResult,
 		); err != nil {
 			return xerrors.Errorf("failed to post message: %v", err)

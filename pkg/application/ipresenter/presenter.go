@@ -6,8 +6,8 @@ import (
 )
 
 type MessagePresenter interface {
-	Post(user model.User, result *domain.ClassifyResult) error
+	PostResult(user model.User, result *domain.ClassifyResult) error
 	PostText(user model.User, text string) error
-	Reply(toUser model.User, toMessageID string, result *domain.ClassifyResult) error
-	ReplyWithQuote(toUser model.User, toTweetIDStr, quotedTweetIDStr, quotedTweetUserScreenName string, result *domain.ClassifyResult) error
+	ReplyResultToMessage(toUser model.User, message *model.Message, result *domain.ClassifyResult) error
+	ReplyResultToMessageWithReference(toUser model.User, targetMessage, referredMessage *model.Message, result *domain.ClassifyResult) error
 }
