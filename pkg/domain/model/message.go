@@ -20,14 +20,13 @@ func (m *MessageMedia) GetURL() string {
 }
 
 type Message struct {
-	ID                  int64
-	User                User
-	Text                string
-	QuoteMessage        *Message
-	InReplyToStatusID   int64
-	InReplyToUserID     int64
-	InReplyToScreenName string
-	Medias              []*MessageMedia
+	ID                int64
+	User              User
+	Text              string
+	ReferencedMessage *Message
+	RepliedMessageID  int64
+	RepliedUser       *User
+	Medias            []*MessageMedia
 }
 
 func (m *Message) GetIDStr() string {
@@ -35,11 +34,11 @@ func (m *Message) GetIDStr() string {
 }
 
 func (m *Message) IsReply() bool {
-	return m.InReplyToUserID != 0
+	return m.RepliedMessageID != 0 || m.RepliedUser != nil
 }
 
-func (m *Message) HasMessageRefference() bool {
-	return m.QuoteMessage != nil
+func (m *Message) HasMessageReference() bool {
+	return m.ReferencedMessage != nil
 }
 
 func (m *Message) GetFirstMedia() (*MessageMedia, bool) {

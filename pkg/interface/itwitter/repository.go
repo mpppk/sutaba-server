@@ -23,17 +23,25 @@ func (r *Twitter) NewMessage(tweet *Tweet) *model.Message {
 	}
 
 	message := &model.Message{
-		ID:                  tweet.ID,
-		User:                tweet.User,
-		Text:                tweet.Text,
-		InReplyToStatusID:   tweet.InReplyToStatusID,
-		InReplyToUserID:     tweet.InReplyToUserID,
-		InReplyToScreenName: tweet.InReplyToScreenName,
-		Medias:              medias,
+		ID:     tweet.ID,
+		User:   tweet.User,
+		Text:   tweet.Text,
+		Medias: medias,
+	}
+
+	if tweet.InReplyToUserID != 0 {
+		message.RepliedUser = &model.User{
+			ID:   tweet.InReplyToUserID,
+			Name: tweet.InReplyToScreenName,
+		}
+	}
+
+	if tweet.InReplyToStatusID != 0 {
+		message.RepliedMessageID = tweet.InReplyToStatusID
 	}
 
 	if tweet.QuoteTweet != nil {
-		message.QuoteMessage = r.NewMessage(tweet.QuoteTweet)
+		message.ReferencedMessage = r.NewMessage(tweet.QuoteTweet)
 	}
 
 	key := strconv.FormatInt(message.ID, 10) // FIXME consider other SNS like slack, mastdon, etc...

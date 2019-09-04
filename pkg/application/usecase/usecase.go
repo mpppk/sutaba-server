@@ -44,7 +44,7 @@ func NewPredictTweetMediaInteractor(conf *PredictTweetMediaInteractorConfig) *Pr
 
 func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model.Message) (string, error) {
 	if forUserIDStr != p.conf.BotUser.GetIDStr() { // FIXME: this is business logic
-		return "anacondaTweet is ignored because event is not for bot", nil
+		return "message is ignored because event is not for bot", nil
 	}
 
 	if reason := domain.IsTargetMessage(&p.conf.BotUser, message, p.conf.TargetKeyword); reason == "" {
@@ -69,18 +69,18 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 			return "", xerrors.Errorf("error occurred in Handle: %w", err)
 		}
 		return "", nil
-	} else if !message.HasMessageRefference() {
+	} else if !message.HasMessageReference() {
 		return reason, nil
 	}
 
 	// Check quote message
-	if reason := domain.IsTargetMessage(&p.conf.BotUser, message.QuoteMessage, p.conf.TargetKeyword); reason != "" {
+	if reason := domain.IsTargetMessage(&p.conf.BotUser, message.ReferencedMessage, p.conf.TargetKeyword); reason != "" {
 		return "quoted tweet: " + reason, nil
 	}
 
 	f := func() error {
 		// ignore error because it is ensured that message has one ore more medias by IsTargetMessage
-		media, _ := message.QuoteMessage.GetFirstMedia()
+		media, _ := message.ReferencedMessage.GetFirstMedia()
 		classifyResult, err := p.classifierService.Classify(media)
 		if err != nil {
 			return xerrors.Errorf("failed to classifyResult: %v", err)
@@ -89,8 +89,8 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 		if err := p.messagePresenter.ReplyWithQuote(
 			message.User,
 			message.GetIDStr(),
-			message.QuoteMessage.GetIDStr(),
-			message.QuoteMessage.User.Name,
+			message.ReferencedMessage.GetIDStr(),
+			message.ReferencedMessage.User.Name,
 			classifyResult,
 		); err != nil {
 			return xerrors.Errorf("failed to post message: %v", err)
