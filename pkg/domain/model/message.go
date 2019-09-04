@@ -24,17 +24,11 @@ type Message struct {
 	User              User
 	Text              string
 	ReferencedMessage *Message
-	RepliedMessageID  int64
-	RepliedUser       *User
 	Medias            []*MessageMedia
 }
 
 func (m *Message) GetIDStr() string {
 	return strconv.FormatInt(m.ID, 10)
-}
-
-func (m *Message) IsReply() bool {
-	return m.RepliedMessageID != 0 || m.RepliedUser != nil
 }
 
 func (m *Message) HasMessageReference() bool {

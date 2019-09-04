@@ -29,17 +29,6 @@ func (r *Twitter) NewMessage(tweet *Tweet) *model.Message {
 		Medias: medias,
 	}
 
-	if tweet.InReplyToUserID != 0 {
-		message.RepliedUser = &model.User{
-			ID:   tweet.InReplyToUserID,
-			Name: tweet.InReplyToScreenName,
-		}
-	}
-
-	if tweet.InReplyToStatusID != 0 {
-		message.RepliedMessageID = tweet.InReplyToStatusID
-	}
-
 	if tweet.QuoteTweet != nil {
 		message.ReferencedMessage = r.NewMessage(tweet.QuoteTweet)
 	}
