@@ -2,6 +2,7 @@ package twitter
 
 import (
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 )
 
 type View struct {
@@ -13,8 +14,8 @@ func (v *View) Show(text string) error {
 	return err
 }
 
-func (v *View) ReplyToTweet(text string, toTweetIDStr string) error {
-	_, err := PostReply(v.Client, text, toTweetIDStr)
+func (v *View) ReplyToTweet(text string, toTweetID model.MessageID) error {
+	_, err := PostReply(v.Client, text, toTweetID)
 	return err
 }
 

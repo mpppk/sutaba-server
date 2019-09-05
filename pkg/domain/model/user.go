@@ -8,7 +8,7 @@ type UserID int64
 type UserName string
 
 type User struct {
-	ID   UserID // FIXME do not expose
+	ID   UserID
 	Name UserName
 }
 
