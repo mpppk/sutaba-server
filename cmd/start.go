@@ -44,8 +44,11 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 
 			user := model.NewTwitterUser(conf.BotTwitterUserID, "sutaba_police2") // FIXME
 
+			tw := itwitter.NewTwitter()
+
 			domainServiceConfig := &registry.ServiceConfig{
 				ClassifierServerHost: conf.ClassifierServerHost,
+				TwitterService:       tw,
 			}
 			viewConfig := &registry.ViewConfig{
 				ConsumerKey:       conf.TwitterConsumerKey,
@@ -65,7 +68,6 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				SorryTweetMessage: conf.SorryTweetMessage,
 			})
 
-			tw := itwitter.NewTwitter()
 			tweetClassificationControllerConfig := &controller.TweetClassificationControllerConfig{
 				BotUser:                  &user,
 				PredictTweetMediaUseCase: predictTweetMediaInteractor,

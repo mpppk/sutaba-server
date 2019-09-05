@@ -1,11 +1,9 @@
 package domain
 
-import (
-	"github.com/mpppk/sutaba-server/pkg/domain/model"
-)
+import "github.com/mpppk/sutaba-server/pkg/domain/model"
 
 type ClassifierService interface {
-	Classify(media *model.MessageMedia) (*ClassifyResult, error)
+	Classify(message *model.Message) (*ClassifyResult, error)
 }
 
 type ClassifyResult struct {

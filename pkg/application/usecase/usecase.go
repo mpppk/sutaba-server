@@ -49,9 +49,7 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 
 	if reason := domain.IsTargetMessage(&p.conf.BotUser, message, p.conf.TargetKeyword); reason == "" {
 		f := func() error {
-			// ignore error because it is ensured that message has one ore more medias by IsTargetMessage
-			media, _ := message.GetFirstMedia()
-			classifyResult, err := p.classifierService.Classify(media)
+			classifyResult, err := p.classifierService.Classify(message)
 			if err != nil {
 				return xerrors.Errorf("failed to classifyResult: %v", err)
 			}
@@ -78,9 +76,7 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 	}
 
 	f := func() error {
-		// ignore error because it is ensured that message has one ore more medias by IsTargetMessage
-		media, _ := message.ReferencedMessage.GetFirstMedia()
-		classifyResult, err := p.classifierService.Classify(media)
+		classifyResult, err := p.classifierService.Classify(message.ReferencedMessage)
 		if err != nil {
 			return xerrors.Errorf("failed to classifyResult: %v", err)
 		}

@@ -28,3 +28,10 @@ func (t *Tweet) IsReply() bool {
 func (t *Tweet) HasQuoteTweet() bool {
 	return t.QuoteTweet != nil
 }
+
+func (t *Tweet) GetFirstMediaURL() (string, bool) {
+	if len(t.MediaURLs) == 0 {
+		return "", false
+	}
+	return t.MediaURLs[0], true
+}

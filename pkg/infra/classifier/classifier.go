@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mpppk/sutaba-server/pkg/domain/model"
+	"github.com/mpppk/sutaba-server/pkg/interface/itwitter"
 
-	"github.com/mpppk/sutaba-server/pkg/application/service"
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
 
@@ -21,13 +21,15 @@ type ImageClassifyServerService struct {
 	host          string
 	retryNum      int
 	retryInterval int
+	twitter       *itwitter.Twitter
 }
 
-func NewImageClassifierServerService(host string, retryNum, retryInterval int) *ImageClassifyServerService {
+func NewImageClassifierServerService(host string, retryNum, retryInterval int, twitter *itwitter.Twitter) *ImageClassifyServerService {
 	return &ImageClassifyServerService{
 		host:          host,
 		retryNum:      retryNum,
 		retryInterval: retryInterval,
+		twitter:       twitter,
 	}
 }
 
@@ -36,8 +38,12 @@ type ImagePredictResponse struct {
 	Confidence string `json:"confidence"`
 }
 
-func (c *ImageClassifyServerService) Classify(media *model.MessageMedia) (*domain.ClassifyResult, error) {
-	imageBytes, err := service.DownloadMediaFromMessageMedia(media, c.retryNum, c.retryInterval) // FIXME
+func (i *ImageClassifyServerService) Classify(message *model.Message) (*domain.ClassifyResult, error) {
+	tweet, ok := i.twitter.RetrieveTweetFromMessage(message)
+	if !ok {
+		return nil, xerrors.Errorf("failed to retrieve tweet from message: %#v", message)
+	}
+	imageBytes, err := itwitter.DownloadMediaFromTweet(tweet, i.retryNum, i.retryInterval) // FIXME
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +51,7 @@ func (c *ImageClassifyServerService) Classify(media *model.MessageMedia) (*domai
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create multipart form: %w", err)
 	}
-	url := c.host + "/predict"
+	url := i.host + "/predict"
 	resp, err := http.Post(url, contentType, body)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to http post to predict endpoint(%s): %w", url, err)

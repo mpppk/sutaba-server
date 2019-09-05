@@ -1,7 +1,13 @@
 package itwitter
 
 import (
-	"strconv"
+	"fmt"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/mpppk/sutaba-server/pkg/util"
+	"golang.org/x/xerrors"
 
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
 )
@@ -17,23 +23,54 @@ func NewTwitter() *Twitter {
 }
 
 func (r *Twitter) NewMessage(tweet *Tweet) *model.Message {
-	var medias []*model.MessageMedia
-	for _, mediaURL := range tweet.MediaURLs {
-		medias = append(medias, model.NewMessageMedia(mediaURL))
-	}
-
 	message := &model.Message{
-		ID:     tweet.ID,
-		User:   tweet.User,
-		Text:   tweet.Text,
-		Medias: medias,
+		ID:       tweet.ID,
+		User:     tweet.User,
+		Text:     tweet.Text,
+		MediaNum: len(tweet.MediaURLs),
 	}
 
 	if tweet.QuoteTweet != nil {
 		message.ReferencedMessage = r.NewMessage(tweet.QuoteTweet)
 	}
 
-	key := strconv.FormatInt(message.ID, 10) // FIXME consider other SNS like slack, mastdon, etc...
-	r.tweetMap[key] = tweet
+	r.tweetMap[message.GetIDStr()] = tweet
 	return message
+}
+
+func (r *Twitter) RetrieveTweetFromMessage(message *model.Message) (*Tweet, bool) {
+	tweet, ok := r.tweetMap[message.GetIDStr()]
+	return tweet, ok
+}
+
+func DownloadMediaFromTweet(tweet *Tweet, retryNum, retryInterval int) ([]byte, error) {
+	mediaURL, ok := tweet.GetFirstMediaURL()
+	if !ok {
+		return nil, xerrors.Errorf("tweet has no media: %#v", tweet)
+	}
+	mediaUrl, err := url.Parse(mediaURL)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to parse media url(%s): %w", mediaURL, err)
+	}
+
+	mediaUrlPaths := strings.Split(mediaUrl.Path, "/")
+	if len(mediaUrlPaths) == 0 {
+		return nil, xerrors.Errorf("invalid mediaUrl: %s", mediaURL)
+	}
+
+	cnt := 0
+	for {
+		bytes, err := util.DownloadFile(mediaURL)
+		if err != nil {
+			if cnt >= retryNum {
+				return nil, xerrors.Errorf("failed to download file from %s (retired %d times): %w", mediaURL, retryNum, err)
+			}
+
+			fmt.Println(xerrors.Errorf("failed to download file from %s: %w", mediaURL, err))
+			time.Sleep(time.Duration(retryInterval) * time.Second)
+			cnt++
+			continue
+		}
+		return bytes, nil
+	}
 }
