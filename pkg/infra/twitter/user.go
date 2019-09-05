@@ -16,7 +16,7 @@ const (
 
 func toUser(anacondaUser *anaconda.User) *model.User {
 	return &model.User{
-		ID:   anacondaUser.Id,
-		Name: anacondaUser.ScreenName,
+		ID:   model.UserID(anacondaUser.Id),
+		Name: model.UserName(anacondaUser.ScreenName),
 	}
 }

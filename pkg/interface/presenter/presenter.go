@@ -33,7 +33,7 @@ func (r *MessagePresenter) PostText(user model.User, text string) error {
 
 func (r *MessagePresenter) ReplyResultToMessage(toUser model.User, message *model.Message, result *domain.ClassifyResult) error {
 	text := generateResultMessage(result)
-	newText := toReplyText(text, []string{toUser.Name})
+	newText := toReplyText(text, []model.UserName{toUser.Name})
 	if err := r.view.ReplyToTweet(newText, message.GetIDStr()); err != nil {
 		return xerrors.Errorf("failed to reply message on Twitter: %w", err)
 	}
@@ -43,28 +43,28 @@ func (r *MessagePresenter) ReplyResultToMessage(toUser model.User, message *mode
 func (r *MessagePresenter) ReplyResultToMessageWithReference(toUser model.User, targetMessage, referredMessage *model.Message, result *domain.ClassifyResult) error {
 	text := generateResultMessage(result)
 	newText := toQuoteTweet(text, referredMessage.GetIDStr(), referredMessage.User.Name)
-	newText = toReplyText(newText, []string{toUser.Name})
+	newText = toReplyText(newText, []model.UserName{toUser.Name})
 	if err := r.view.ReplyToTweet(newText, targetMessage.GetIDStr()); err != nil {
 		return xerrors.Errorf("failed to reply with reference message on Twitter: %w", err)
 	}
 	return nil
 }
 
-func toReplyText(text string, toScreenNames []string) string {
+func toReplyText(text string, toUserNames []model.UserName) string {
 	var mentions []string
-	for _, toScreenName := range toScreenNames {
-		mentions = append(mentions, "@"+toScreenName)
+	for _, toScreenName := range toUserNames {
+		mentions = append(mentions, "@"+string(toScreenName))
 	}
 	return fmt.Sprintf("%s\n%s", strings.Join(mentions, " "), text)
 }
 
-func toQuoteTweet(text string, quotedTweetIDStr, quotedTweetUserScreenName string) string {
+func toQuoteTweet(text string, quotedTweetIDStr string, quotedTweetUserScreenName model.UserName) string {
 	return text + " " + buildTweetUrl(
 		quotedTweetUserScreenName,
 		quotedTweetIDStr,
 	)
 }
 
-func buildTweetUrl(userName, id string) string {
+func buildTweetUrl(userName model.UserName, id string) string {
 	return fmt.Sprintf("https://twitter.com/%s/status/%s", userName, id)
 }

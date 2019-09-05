@@ -24,9 +24,9 @@ func NewTwitter() *Twitter {
 
 func (r *Twitter) NewMessage(tweet *Tweet) *model.Message {
 	message := &model.Message{
-		ID:       tweet.ID,
+		ID:       model.MessageID(tweet.ID),
 		User:     tweet.User,
-		Text:     tweet.Text,
+		Text:     model.MessageText(tweet.Text),
 		MediaNum: len(tweet.MediaURLs),
 	}
 

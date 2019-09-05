@@ -31,7 +31,7 @@ func NewTweetClassificationController(config *TweetClassificationControllerConfi
 
 func (t *TweetClassificationController) Handle(forUserIDStr string, tweets []*itwitter.Tweet) error {
 	for _, tweet := range tweets {
-		if tweet.InReplyToUserID != t.botUser.ID {
+		if tweet.InReplyToUserID != int64(t.botUser.ID) {
 			util.LogPrintfInOneLine("anacondaTweet is ignored because it is not sent to subscribe user")
 			continue
 		}
