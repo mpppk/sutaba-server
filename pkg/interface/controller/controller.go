@@ -11,13 +11,13 @@ import (
 
 type TweetClassificationController struct {
 	botUser                  *model.User
-	predictTweetMediaUseCase usecase.PredictTweetMediaUseCase
+	predictTweetMediaUseCase usecase.PredictMessageMediaUseCase
 	twitter                  itwitter.Twitter
 }
 
 type TweetClassificationControllerConfig struct {
 	BotUser                  *model.User
-	PredictTweetMediaUseCase usecase.PredictTweetMediaUseCase
+	PredictTweetMediaUseCase usecase.PredictMessageMediaUseCase
 	Twitter                  *itwitter.Twitter
 }
 

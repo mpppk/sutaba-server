@@ -15,11 +15,11 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type PredictTweetMediaUseCase interface {
+type PredictMessageMediaUseCase interface {
 	Handle(forUserIDStr string, message *model.Message) (string, error)
 }
 
-type PredictTweetMediaInteractorConfig struct {
+type PredictMessageMediaInteractorConfig struct {
 	BotUser           model.User
 	TargetKeyword     string
 	ErrorTweetMessage string
@@ -28,21 +28,21 @@ type PredictTweetMediaInteractorConfig struct {
 	ClassifierService domain.ClassifierService
 }
 
-type PredictTweetMediaInteractor struct {
-	conf              *PredictTweetMediaInteractorConfig
+type PredictMessageMediaInteractor struct {
+	conf              *PredictMessageMediaInteractorConfig
 	messagePresenter  ipresenter.MessagePresenter
 	classifierService domain.ClassifierService
 }
 
-func NewPredictTweetMediaInteractor(conf *PredictTweetMediaInteractorConfig) *PredictTweetMediaInteractor {
-	return &PredictTweetMediaInteractor{
+func NewPredictMessageMediaInteractor(conf *PredictMessageMediaInteractorConfig) *PredictMessageMediaInteractor {
+	return &PredictMessageMediaInteractor{
 		conf:              conf,
 		messagePresenter:  conf.MessagePresenter,
 		classifierService: conf.ClassifierService,
 	}
 }
 
-func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model.Message) (string, error) {
+func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *model.Message) (string, error) {
 	if forUserIDStr != p.conf.BotUser.GetIDStr() { // FIXME: this is business logic
 		return "message is ignored because event is not for bot", nil
 	}
@@ -100,7 +100,7 @@ func (p *PredictTweetMediaInteractor) Handle(forUserIDStr string, message *model
 	return "", nil
 }
 
-func (p *PredictTweetMediaInteractor) notifyError(err error) {
+func (p *PredictMessageMediaInteractor) notifyError(err error) {
 	errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
 	if err := p.messagePresenter.PostText(p.conf.BotUser, errTweetText); err != nil {
 		util.LogPrintlnInOneLine("failed to message error notify message", err)

@@ -60,7 +60,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 			presenterConfig := &registry.PresenterConfig{
 				View: registry.NewView(viewConfig).NewMessageView(),
 			}
-			predictTweetMediaInteractor := usecase.NewPredictTweetMediaInteractor(&usecase.PredictTweetMediaInteractorConfig{
+			predictMessageMediaInteractor := usecase.NewPredictMessageMediaInteractor(&usecase.PredictMessageMediaInteractorConfig{
 				MessagePresenter:  registry.NewPresenter(presenterConfig).NewMessagePresenter(),
 				BotUser:           user,
 				ClassifierService: registry.NewDomainService(domainServiceConfig).NewClassifierService(),
@@ -70,7 +70,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 
 			tweetClassificationControllerConfig := &controller.TweetClassificationControllerConfig{
 				BotUser:                  &user,
-				PredictTweetMediaUseCase: predictTweetMediaInteractor,
+				PredictTweetMediaUseCase: predictMessageMediaInteractor,
 				Twitter:                  tw,
 			}
 
