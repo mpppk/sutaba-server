@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-var testDir = "../../testdata/aaa"
+var testDir = "../../../testdata/aaa"
 
 func TestAccountActivityEvents(t *testing.T) {
 	tests := []struct {

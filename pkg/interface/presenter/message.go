@@ -1,24 +1,21 @@
-package sutaba
+package presenter
 
 import (
 	"fmt"
 	"math/rand"
-	"strconv"
 	"time"
 
-	"github.com/mpppk/sutaba-server/pkg/classifier"
-
-	"golang.org/x/xerrors"
+	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
 )
 
-func PredToText(predict *classifier.ImagePredictResponse) (string, error) {
-	conf, err := strconv.ParseFloat(predict.Confidence, 32)
-	if err != nil {
-		return "", xerrors.Errorf("failed to parse confidence(%s) to float: %w", predict.Confidence)
-	}
-	confidence := float32(conf)
+func generateResultMessage(result *domain.ClassifyResult) string {
+	confidence := float32(result.Confidence)
+	return classAndConfidenceToText(result.Class, confidence)
+}
+
+func classAndConfidenceToText(className string, confidence float32) string {
 	predStr := ""
-	switch predict.Pred {
+	switch className {
 	case "sutaba":
 		if confidence > 0.8 {
 			predStr = GetRandomSutabaHighConfidenceText()
@@ -45,7 +42,7 @@ func PredToText(predict *classifier.ImagePredictResponse) (string, error) {
 		}
 	}
 
-	return predStr, nil
+	return predStr
 }
 
 func pickRandomStr(texts []string) string {

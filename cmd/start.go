@@ -3,16 +3,23 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/mpppk/sutaba-server/pkg/util"
+	"github.com/mpppk/sutaba-server/pkg/interface/itwitter"
+
+	"github.com/mpppk/sutaba-server/pkg/interface/controller"
+
+	"github.com/mpppk/sutaba-server/pkg/application/usecase"
+
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
+
+	"github.com/mpppk/sutaba-server/pkg/registry"
+
+	"github.com/mpppk/sutaba-server/pkg/infra/handler"
 
 	"github.com/spf13/viper"
 
-	"github.com/mpppk/sutaba-server/pkg/sutaba"
-
-	"github.com/mpppk/sutaba-server/pkg/twitter"
+	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
 
 	"github.com/labstack/echo/v4/middleware"
 
@@ -23,11 +30,6 @@ import (
 
 	"github.com/spf13/cobra"
 )
-
-func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
-	util.LogPrintfInOneLine("Request Body: %v\n", strings.Replace(string(reqBody), "\n", " ", -1))
-	util.LogPrintfInOneLine("Response Body: %v\n", strings.Replace(string(resBody), "\n", " ", -1))
-}
 
 func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 	cmd := &cobra.Command{
@@ -40,29 +42,48 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				return err
 			}
 
-			botUser := twitter.NewUser(
-				conf.BotTwitterAccessToken,
-				conf.BotTwitterAccessTokenSecret,
-				conf.TwitterConsumerKey,
-				conf.TwitterConsumerSecret,
-				conf.BotTwitterUserID,
-				conf.TweetKeyword,
-				true,
-				twitter.ReplyWithQuote,
-			)
-			predictHandlerConfig := &sutaba.PredictHandlerConfig{
-				SendUser:             botUser,
+			user := model.NewTwitterUser(conf.BotTwitterUserID, "sutaba_police2") // FIXME
+
+			tw := itwitter.NewTwitter()
+
+			domainServiceConfig := &registry.ServiceConfig{
 				ClassifierServerHost: conf.ClassifierServerHost,
-				ErrorTweetMessage:    conf.ErrorTweetMessage,
-				SorryTweetMessage:    conf.SorryTweetMessage,
+				TwitterService:       tw,
+			}
+			viewConfig := &registry.ViewConfig{
+				ConsumerKey:       conf.TwitterConsumerKey,
+				ConsumerSecret:    conf.TwitterConsumerSecret,
+				AccessToken:       conf.BotTwitterAccessToken,
+				AccessTokenSecret: conf.BotTwitterAccessTokenSecret,
+			}
+
+			presenterConfig := &registry.PresenterConfig{
+				View: registry.NewView(viewConfig).NewMessageView(),
+			}
+			predictMessageMediaInteractor := usecase.NewPredictMessageMediaInteractor(&usecase.PredictMessageMediaInteractorConfig{
+				MessagePresenter:  registry.NewPresenter(presenterConfig).NewMessagePresenter(),
+				BotUser:           user,
+				ClassifierService: registry.NewDomainService(domainServiceConfig).NewClassifierService(),
+				ErrorTweetMessage: conf.ErrorTweetMessage,
+				SorryTweetMessage: conf.SorryTweetMessage,
+			})
+
+			tweetClassificationControllerConfig := &controller.TweetClassificationControllerConfig{
+				BotUser:                  &user,
+				PredictTweetMediaUseCase: predictMessageMediaInteractor,
+				Twitter:                  tw,
+			}
+
+			predictHandlerConfig := &handler.PredictHandlerConfig{
+				TweetClassificationController: controller.NewTweetClassificationController(tweetClassificationControllerConfig),
 			}
 
 			e := echo.New()
-			e.Use(middleware.BodyDump(bodyDumpHandler))
+			e.Use(middleware.BodyDump(handler.BodyDumpHandler))
 
 			endpoint := "/twitter/aaa"
 			e.GET(endpoint, twitter.GenerateCRCTestHandler(conf.TwitterConsumerSecret))
-			e.POST(endpoint, sutaba.GeneratePredictHandler(predictHandlerConfig))
+			e.POST(endpoint, handler.GeneratePredictHandler(predictHandlerConfig))
 
 			port := "1323"
 			if conf.Port != "" {
