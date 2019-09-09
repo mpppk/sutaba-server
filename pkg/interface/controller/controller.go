@@ -32,18 +32,18 @@ func NewTweetClassificationController(config *TweetClassificationControllerConfi
 func (t *TweetClassificationController) Handle(forUserIDStr string, tweets []*itwitter.Tweet) error {
 	for _, tweet := range tweets {
 		if tweet.InReplyToUserID != int64(t.botUser.ID) {
-			util.LogPrintfInOneLine("anacondaTweet is ignored because it is not sent to subscribe user")
+			util.LogPrintfInOneLine("tweet is ignored because it is not sent to subscribe user(%d): receiver(%d)", t.botUser.ID, tweet.InReplyToUserID)
 			continue
 		}
 		message := t.twitter.NewMessage(tweet)
 		ignoreReason, err := t.predictTweetMediaUseCase.Handle(forUserIDStr, message)
 		if err != nil {
-			util.LogPrintfInOneLine("error occurred: %v", err)
+			util.LogPrintfInOneLine("error occurred while tweet media predicting: %v", err)
 			return err
 		}
 
 		if ignoreReason != "" {
-			util.LogPrintfInOneLine("anacondaTweet is ignored. reason: %v", ignoreReason)
+			util.LogPrintfInOneLine("tweet is ignored. reason: %v", ignoreReason)
 		}
 	}
 
