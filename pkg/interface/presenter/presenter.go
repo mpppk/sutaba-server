@@ -20,30 +20,34 @@ func NewPresenter(view view.TwitterView) *MessagePresenter {
 	}
 }
 
-func (r *MessagePresenter) PostResult(user model.User, result *domain.ClassifyResult) error {
-	return r.PostText(user, generateResultMessage(result))
+func (r *MessagePresenter) PostResult(result *domain.ClassifyResult) error {
+	return r.PostText(generateResultMessage(result))
 }
 
-func (r *MessagePresenter) PostText(user model.User, text string) error {
+func (r *MessagePresenter) PostText(text string) error {
 	if err := r.view.Show(text); err != nil {
 		return xerrors.Errorf("failed to post message to Twitter: %w", err)
 	}
 	return nil
 }
 
-func (r *MessagePresenter) ReplyResultToMessage(toUser model.User, message *model.Message, result *domain.ClassifyResult) error {
-	text := generateResultMessage(result)
-	newText := toReplyText(text, []model.UserName{toUser.Name})
-	if err := r.view.ReplyToTweet(newText, message.ID); err != nil {
+func (r *MessagePresenter) ReplyToMessage(toMessage *model.Message, text string) error {
+	newText := toReplyText(text, []model.UserName{toMessage.User.Name})
+	if err := r.view.ReplyToTweet(newText, toMessage.ID); err != nil {
 		return xerrors.Errorf("failed to reply message on Twitter: %w", err)
 	}
 	return nil
 }
 
-func (r *MessagePresenter) ReplyResultToMessageWithReference(toUser model.User, targetMessage, referredMessage *model.Message, result *domain.ClassifyResult) error {
+func (r *MessagePresenter) ReplyResultToMessage(toMessage *model.Message, result *domain.ClassifyResult) error {
+	text := generateResultMessage(result)
+	return r.ReplyToMessage(toMessage, text)
+}
+
+func (r *MessagePresenter) ReplyResultToMessageWithReference(targetMessage, referredMessage *model.Message, result *domain.ClassifyResult) error {
 	text := string(generateResultMessage(result))
 	newText := toQuoteTweet(text, referredMessage.ID, referredMessage.User.Name)
-	newText = toReplyText(newText, []model.UserName{toUser.Name})
+	newText = toReplyText(newText, []model.UserName{targetMessage.User.Name})
 	if err := r.view.ReplyToTweet(newText, targetMessage.ID); err != nil {
 		return xerrors.Errorf("failed to reply with reference message on Twitter: %w", err)
 	}

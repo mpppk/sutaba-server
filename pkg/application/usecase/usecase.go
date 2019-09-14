@@ -54,7 +54,6 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 				return xerrors.Errorf("failed to classifyResult: %v", err)
 			}
 			return p.messagePresenter.ReplyResultToMessageWithReference(
-				message.User,
 				message,
 				message,
 				classifyResult,
@@ -62,7 +61,7 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 		}
 		err := f()
 		if err != nil {
-			p.notifyError(err)
+			p.notifyError(message, err)
 			return "", xerrors.Errorf("error occurred in Handle: %w", err)
 		}
 		return "", nil
@@ -82,7 +81,6 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 		}
 
 		if err := p.messagePresenter.ReplyResultToMessageWithReference(
-			message.User,
 			message,
 			message.ReferencedMessage,
 			classifyResult,
@@ -94,19 +92,19 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 	}
 	err := f()
 	if err != nil {
-		p.notifyError(err)
+		p.notifyError(message, err)
 		return "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
 	}
 	return "", nil
 }
 
-func (p *PredictMessageMediaInteractor) notifyError(err error) {
+func (p *PredictMessageMediaInteractor) notifyError(toMessage *model.Message, err error) {
 	errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
-	if err := p.messagePresenter.PostText(p.conf.BotUser, errTweetText); err != nil {
+	if err := p.messagePresenter.PostText(errTweetText); err != nil {
 		util.LogPrintlnInOneLine("failed to message error notify message", err)
 	}
 
-	if err := p.messagePresenter.PostText(p.conf.BotUser, p.conf.SorryTweetMessage); err != nil {
+	if err := p.messagePresenter.ReplyToMessage(toMessage, p.conf.SorryTweetMessage); err != nil {
 		util.LogPrintlnInOneLine("failed to message error notify message", err)
 	}
 }
