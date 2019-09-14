@@ -10,6 +10,7 @@ type StartCmdConfig struct {
 	SorryTweetMessage           string `mapstructure:"SORRY_TWEET_MESSAGE"`
 	TweetKeyword                string `mapstructure:"TWEET_KEYWORD"`
 	BotTwitterUserID            int64  `mapstructure:"BOT_TWITTER_USER_ID"`
+	BotTwitterUserScreenName    string `mapstructure:"BOT_TWITTER_USER_SCREEN_NAME"`
 	ClassifierServerHost        string `mapstructure:"CLASSIFIER_SERVER_HOST"`
 	Port                        string `mapstructure:"PORT"`
 }
