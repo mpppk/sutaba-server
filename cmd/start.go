@@ -42,7 +42,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 				return err
 			}
 
-			user := model.NewTwitterUser(conf.BotTwitterUserID, "sutaba_police2") // FIXME
+			user := model.NewTwitterUser(conf.BotTwitterUserID, conf.BotTwitterUserScreenName) // FIXME
 
 			tw := itwitter.NewTwitter()
 
@@ -143,7 +143,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 	envStrs := []string{
 		"PORT", "ERROR_TWEET_MESSAGE", "SORRY_TWEET_MESSAGE",
 		"CLASSIFIER_SERVER_HOST",
-		"TWEET_KEYWORD", "BOT_TWITTER_USER_ID",
+		"TWEET_KEYWORD", "BOT_TWITTER_USER_ID", "BOT_TWITTER_USER_SCREEN_NAME",
 		"TWITTER_CONSUMER_KEY", "TWITTER_CONSUMER_SECRET",
 		"BOT_TWITTER_ACCESS_TOKEN", "BOT_TWITTER_ACCESS_TOKEN_SECRET",
 	}
