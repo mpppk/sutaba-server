@@ -17,7 +17,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var tweetIDMap = util.NewIDMap()
+var tweetIDMap = util.NewIDMap(60*5, 60*10)
 
 func BodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
 	util.LogPrintfInOneLine("Request Body: %v\n", strings.Replace(string(reqBody), "\n", " ", -1))
@@ -29,6 +29,7 @@ type PredictHandlerConfig struct {
 }
 
 func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) error {
+	tweetIDMap.StartExpirationCheck()
 	return func(c echo.Context) error {
 		events := new(twitter.AccountActivityEvent)
 		if err := c.Bind(events); err != nil {
