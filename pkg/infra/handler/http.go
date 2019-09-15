@@ -17,6 +17,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var tweetIDMap = util.NewIDMap()
+
 func BodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
 	util.LogPrintfInOneLine("Request Body: %v\n", strings.Replace(string(reqBody), "\n", " ", -1))
 	util.LogPrintfInOneLine("Response Body: %v\n", strings.Replace(string(resBody), "\n", " ", -1))
@@ -45,7 +47,13 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 
 		var tweets []*itwitter.Tweet
 		for _, anacondaTweet := range events.TweetCreateEvents {
-			tweets = append(tweets, twitter.ToTweet(anacondaTweet))
+			tweet := twitter.ToTweet(anacondaTweet)
+			_, loaded := tweetIDMap.LoadOrStore(tweet.ID)
+			if loaded {
+				util.LogPrintfInOneLine("tweet is ignored because it is already processed. id: %d", tweet.ID)
+			} else {
+				tweets = append(tweets, tweet)
+			}
 		}
 
 		if err := conf.TweetClassificationController.Handle(events.ForUserId, tweets); err != nil {
