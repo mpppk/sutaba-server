@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/mpppk/anacondaaaa"
+
 	"github.com/mpppk/sutaba-server/pkg/interface/itwitter"
 
 	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
@@ -31,7 +33,7 @@ type PredictHandlerConfig struct {
 func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) error {
 	tweetIDMap.StartExpirationCheck()
 	return func(c echo.Context) error {
-		events := new(twitter.AccountActivityEvent)
+		events := new(anacondaaaa.AccountActivityEvent)
 		if err := c.Bind(events); err != nil {
 			return err
 		}
@@ -42,7 +44,7 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 			util.LogPrintfInOneLine("twitter event received: %#v\n", events)
 		}
 
-		if events.GetEventName() != twitter.TweetCreateEventsEventName {
+		if events.GetEventName() != anacondaaaa.TweetCreateEventsEventName {
 			return nil
 		}
 
