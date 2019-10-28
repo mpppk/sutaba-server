@@ -3,14 +3,143 @@ package presenter
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
+	"golang.org/x/xerrors"
+
+	"github.com/mpppk/messagen/messagen"
 	domain "github.com/mpppk/sutaba-server/pkg/domain/service"
 )
 
-func generateResultMessage(result *domain.ClassifyResult) string {
+type MessagenType string
+
+const (
+	RootType              = "Root"
+	TweetCheckType        = "TweetCheck"
+	SutabaDescriptionType = "SutabaDescription"
+	GoodEmojiType         = "GoodEmoji"
+	LastMessageType       = "LastMessage"
+	ExclamationType       = "Exclamation"
+	ThinkingEmojiType     = "ThinkingEmoji"
+	ConfidenceType        = "Confidence"
+	ConfidenceHighValue   = "High"
+	ConfidenceMediumValue = "Medium"
+	ConfidenceLowValue    = "Low"
+	ClassType             = "Class"
+	ClassSutabaValue      = "sutaba"
+	ClassRamenValue       = "ramen"
+	ClassOtherValue       = "other"
+	DebugType             = "Debug"
+	DebugOnValue          = "on"
+	DebugOffValue         = "off"
+	RuleNumType           = "RuleNum"
+)
+
+func generateResultMessage(result *domain.ClassifyResult) (string, error) {
 	confidence := float32(result.Confidence)
-	return classAndConfidenceToText(result.Class, confidence)
+	generator, err := messagen.New(nil)
+	if err != nil {
+		return "", xerrors.Errorf("failed to generate messagen instance: %w", err)
+	}
+
+	if err := generator.AddDefinition(getMessagenDefinitions()...); err != nil {
+		return "", xerrors.Errorf("failed to add definitions to messagen: %w", err)
+	}
+
+	state := map[string]string{
+		"Class": result.Class,
+	}
+
+	if confidence > 0.8 {
+		state["Confidence"] = "High"
+	} else if confidence > 0.5 {
+		state["Confidence"] = "Medium"
+	} else {
+		state["Confidence"] = "Low"
+	}
+
+	fmt.Println("state", state)
+
+	messages, err := generator.Generate("Root", state, 1)
+	if err != nil {
+		return "", err
+	}
+	return messages[0], nil
+}
+
+func toTemplateVariable(v string) string {
+	return "{{." + v + "}}"
+}
+
+func toTemplate(tmpl string, variables ...string) string {
+	var newVariables []interface{}
+	for _, v := range variables {
+		newVariables = append(newVariables, toTemplateVariable(v))
+	}
+	return fmt.Sprintf(tmpl, newVariables...)
+}
+
+func w(v string) string {
+	return toTemplateVariable(v)
+}
+
+func getMessagenDefinitions() []*messagen.Definition {
+	return []*messagen.Definition{
+		{
+			Type: RootType,
+			Templates: []string{
+				toTemplate("ピピーッ❗️🔔⚡️スタバ警察です❗️👊👮❗️\n%s%sスタバ❗️❗️%s\n%s",
+					TweetCheckType, SutabaDescriptionType, GoodEmojiType, LastMessageType),
+			},
+			Constraints: map[string]string{ClassType: ClassSutabaValue},
+		},
+		{
+			Type: RootType,
+			Templates: []string{toTemplate("ピピーッ❗️🔔⚡️スタバ警察です❗️👊👮❗️\n"+
+				"アナタのツイート💕は❌スタバ法❌第%s条🙋\n"+
+				"「スタバぢゃないツイートをスタバなうツイート💕してゎイケナイ❗️」\n"+
+				"に違反しています😡今スグ消しなｻｲ❗️❗️❗️❗️✌️👮🔫\n", RuleNumType)},
+			Constraints: map[string]string{
+				ClassType:            ClassSutabaValue,
+				ConfidenceType + "/": ConfidenceHighValue + "|" + ConfidenceMediumValue},
+		},
+		{
+			Type: RootType,
+			Templates: []string{toTemplate(
+				`{"class": "%s", "confidence": "%s"}`, ClassType, ConfidenceType)},
+			Constraints: map[string]string{DebugType + ":1": DebugOnValue},
+		},
+		{
+			Type: TweetCheckType,
+			Templates: []string{
+				w(ExclamationType) + "このツイート" + strings.Repeat(w(ThinkingEmojiType), 3) + "...",
+			},
+		},
+		{
+			Type:      TweetCheckType,
+			Templates: []string{"アアーーー❗️なんだこれはーーー❗️❗️"},
+			Weight:    0.5,
+		},
+		{Type: ExclamationType, Templates: []string{"ムムッ", "ヤヤッ", "オオッ"}},
+		{Type: ThinkingEmojiType, Templates: []string{"🤔", "🤨"}},
+		{Type: GoodEmojiType, Templates: []string{"😆", "😂"}},
+		{
+			Type:        SutabaDescriptionType,
+			Templates:   []string{"完全に", "間違いなく"},
+			Constraints: map[string]string{ConfidenceType: ConfidenceHighValue},
+		},
+		{
+			Type:        SutabaDescriptionType,
+			Templates:   []string{"おそらく", "多分"},
+			Constraints: map[string]string{ConfidenceType: ConfidenceMediumValue},
+		},
+		{
+			Type: LastMessageType,
+			Templates: []string{"この調子でグッドなスタバツイートを心がけるようにッ❗️👮‍👮‍",
+				"市民の協力に感謝するッッッ👮‍👮‍❗"},
+		},
+	}
 }
 
 func classAndConfidenceToText(className string, confidence float32) string {
