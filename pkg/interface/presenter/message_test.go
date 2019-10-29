@@ -3,34 +3,42 @@ package presenter
 import (
 	"fmt"
 	"testing"
+
+	"github.com/mpppk/messagen/messagen"
 )
 
-func TestGetRandomSutabaHighConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomSutabaHighConfidenceText())
-}
-func TestGetRandomSutabaMiddleConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomSutabaMiddleConfidenceText())
-}
-func TestGetRandomSutabaLowConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomSutabaLowConfidenceText())
-}
+func Test_getMessagenDefinitions(t *testing.T) {
+	classTypes := []string{ClassSutabaValue, ClassRamenValue, ClassOtherValue}
+	confidenceTypes := []string{ConfidenceHighValue, ConfidenceMediumValue, ConfidenceLowValue}
+	debugTypes := []string{DebugOnValue, DebugOffValue}
 
-func TestGetRandomRamenHighConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomRamenHighConfidenceText(0.5))
-}
-func TestGetRandomRamenMiddleConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomRamenMiddleConfidenceText(0.5))
-}
-func TestGetRandomRamenLowConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomRamenLowConfidenceText(0.5))
-}
+	var states []map[string]string
+	for _, cType := range classTypes {
+		for _, confType := range confidenceTypes {
+			for _, dType := range debugTypes {
+				states = append(states, map[string]string{
+					ClassType:      cType,
+					ConfidenceType: confType,
+					DebugType:      dType,
+					RuleNumType:    "999",
+				})
+			}
+		}
+	}
 
-func TestGetRandomOtherHighConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomOtherHighConfidenceText(0.25))
-}
-func TestGetRandomOtherMiddleConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomOtherMiddleConfidenceText(0.5))
-}
-func TestGetRandomOtherLowConfidenceText(t *testing.T) {
-	fmt.Println(GetRandomOtherLowConfidenceText())
+	definitions := getMessagenDefinitions()
+	generator, err := messagen.New(nil)
+	if err != nil {
+		t.Errorf("error occurred when generate new messagen instance %v", err)
+	}
+	if err := generator.AddDefinition(definitions...); err != nil {
+		t.Errorf("error occurred when add definitions: %v", err)
+	}
+	for _, state := range states {
+		messages, err := generator.Generate("Root", state, 1)
+		if err != nil {
+			t.Errorf("error occurred when generate message: state: %v, err: %v", state, err)
+		}
+		fmt.Println(state, messages[0])
+	}
 }

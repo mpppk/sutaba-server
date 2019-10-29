@@ -21,7 +21,11 @@ func NewPresenter(view view.TwitterView) *MessagePresenter {
 }
 
 func (r *MessagePresenter) PostResult(result *domain.ClassifyResult) error {
-	return r.PostText(generateResultMessage(result))
+	message, err := generateResultMessage(result)
+	if err != nil {
+		return xerrors.Errorf("failed to post result: %w", err)
+	}
+	return r.PostText(message)
 }
 
 func (r *MessagePresenter) PostText(text string) error {
@@ -40,12 +44,18 @@ func (r *MessagePresenter) ReplyToMessage(toMessage *model.Message, text string)
 }
 
 func (r *MessagePresenter) ReplyResultToMessage(toMessage *model.Message, result *domain.ClassifyResult) error {
-	text := generateResultMessage(result)
+	text, err := generateResultMessage(result)
+	if err != nil {
+		return xerrors.Errorf("failed to reply result to message: %w", err)
+	}
 	return r.ReplyToMessage(toMessage, text)
 }
 
 func (r *MessagePresenter) ReplyResultToMessageWithReference(targetMessage, referredMessage *model.Message, result *domain.ClassifyResult) error {
-	text := string(generateResultMessage(result))
+	text, err := generateResultMessage(result)
+	if err != nil {
+		return xerrors.Errorf("failed to post result: %w", err)
+	}
 	newText := toQuoteTweet(text, referredMessage.ID, referredMessage.User.Name)
 	newText = toReplyText(newText, []model.UserName{targetMessage.User.Name})
 	if err := r.view.ReplyToTweet(newText, targetMessage.ID); err != nil {
