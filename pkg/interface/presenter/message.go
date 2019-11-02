@@ -2,6 +2,8 @@ package presenter
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 
 	"golang.org/x/xerrors"
@@ -23,6 +25,7 @@ const (
 	ExclamationType       = "Exclamation"
 	ThinkingEmojiType     = "ThinkingEmoji"
 	ConfidenceType        = "Confidence"
+	ConfidencePercentType = "ConfidencePercent"
 	ConfidenceHighValue   = "High"
 	ConfidenceMediumValue = "Medium"
 	ConfidenceLowValue    = "Low"
@@ -38,7 +41,7 @@ const (
 	RamenSuffixType       = "RamenSuffix"
 )
 
-func generateResultMessage(result *domain.ClassifyResult) (string, error) {
+func generateResultMessage(result *domain.ClassifyResult, isDebug bool) (string, error) {
 	confidence := float32(result.Confidence)
 	generator, err := messagen.New(nil)
 	if err != nil {
@@ -53,12 +56,18 @@ func generateResultMessage(result *domain.ClassifyResult) (string, error) {
 		ClassType: result.Class,
 	}
 
+	state[RuleNumType] = strconv.Itoa(int(math.Round(float64(confidence * 1000.0))))
+	state[ConfidencePercentType] = fmt.Sprintf("%.3f", confidence)
 	if confidence > 0.8 {
 		state[ConfidenceType] = ConfidenceHighValue
 	} else if confidence > 0.5 {
 		state[ConfidenceType] = ConfidenceMediumValue
 	} else {
 		state[ConfidenceType] = ConfidenceLowValue
+	}
+
+	if isDebug {
+		state[DebugType] = DebugOnValue
 	}
 
 	messages, err := generator.Generate(RootType, state, 1)
@@ -175,7 +184,7 @@ func getMessagenDefinitions() []*messagen.Definition {
 		{
 			Type: RootType,
 			Templates: []string{toTemplate(
-				`{"class": "%s", "confidence": "%s"}`, ClassType, ConfidenceType)},
+				`{"class": "%s", "confidence": "%s"}`, ClassType, ConfidencePercentType)},
 			Constraints: map[string]string{DebugType + ":1": DebugOnValue},
 		},
 		{

@@ -57,6 +57,7 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 				message,
 				message,
 				classifyResult,
+				message.IsDebugMode(),
 			)
 		}
 		err := f()
@@ -84,6 +85,7 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 			message,
 			message.ReferencedMessage,
 			classifyResult,
+			message.IsDebugMode(),
 		); err != nil {
 			return xerrors.Errorf("failed to post message: %v", err)
 		}
