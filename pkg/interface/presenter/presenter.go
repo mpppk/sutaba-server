@@ -20,8 +20,8 @@ func NewPresenter(view view.TwitterView) *MessagePresenter {
 	}
 }
 
-func (r *MessagePresenter) PostResult(result *domain.ClassifyResult) error {
-	message, err := generateResultMessage(result)
+func (r *MessagePresenter) PostResult(result *domain.ClassifyResult, isDebug bool) error {
+	message, err := generateResultMessage(result, isDebug)
 	if err != nil {
 		return xerrors.Errorf("failed to post result: %w", err)
 	}
@@ -43,16 +43,16 @@ func (r *MessagePresenter) ReplyToMessage(toMessage *model.Message, text string)
 	return nil
 }
 
-func (r *MessagePresenter) ReplyResultToMessage(toMessage *model.Message, result *domain.ClassifyResult) error {
-	text, err := generateResultMessage(result)
+func (r *MessagePresenter) ReplyResultToMessage(toMessage *model.Message, result *domain.ClassifyResult, isDebug bool) error {
+	text, err := generateResultMessage(result, isDebug)
 	if err != nil {
 		return xerrors.Errorf("failed to reply result to message: %w", err)
 	}
 	return r.ReplyToMessage(toMessage, text)
 }
 
-func (r *MessagePresenter) ReplyResultToMessageWithReference(targetMessage, referredMessage *model.Message, result *domain.ClassifyResult) error {
-	text, err := generateResultMessage(result)
+func (r *MessagePresenter) ReplyResultToMessageWithReference(targetMessage, referredMessage *model.Message, result *domain.ClassifyResult, isDebug bool) error {
+	text, err := generateResultMessage(result, isDebug)
 	if err != nil {
 		return xerrors.Errorf("failed to post result: %w", err)
 	}

@@ -13,6 +13,8 @@ func (m MessageID) ToString() string {
 
 type MessageText string
 
+var debugKeyword = "--debug"
+
 func (m MessageText) HasKeyword(keyword string) bool {
 	return strings.Contains(string(m), keyword)
 }
@@ -35,4 +37,8 @@ func (m *Message) HasMessageReference() bool {
 
 func (m *Message) HasKeyWord(keyword string) bool {
 	return m.Text.HasKeyword(keyword)
+}
+
+func (m *Message) IsDebugMode() bool {
+	return m.Text.HasKeyword(debugKeyword)
 }
