@@ -9,7 +9,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mpppk/anacondaaaa v0.0.1
 	github.com/mpppk/messagen v0.0.2
-	github.com/rhysd/go-github-selfupdate v1.2.0
+	github.com/rhysd/go-github-selfupdate v1.2.1
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
