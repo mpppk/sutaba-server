@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/labstack/echo/v4 v4.1.14
+	github.com/labstack/echo/v4 v4.1.15
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mpppk/anacondaaaa v0.0.1
 	github.com/mpppk/messagen v0.0.2
