@@ -70,6 +70,7 @@ steps:
         TMP_VAR=`echo $BRANCH_NAME | sed -r 's,/,-,g'`; \
         echo ${_NEW_BRANCH_NAME}yyy; \
         echo ${_TMP_VAR}zzz; \
-        echo ${TMP_VAR}111
+        echo ${TMP_VAR}111; \
+        echo `echo $BRANCH_NAME | sed -r 's,/,-,g'`
 substitutions:
   _NEW_BRANCH_NAME: $_TMP_VAR
