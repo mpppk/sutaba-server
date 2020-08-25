@@ -64,9 +64,8 @@ steps:
     args:
       - "-c"
       - |-
-        echo ${_NEW_BRANCH_NAME}; \
+        echo ${_NEW_BRANCH_NAME}xxx; \
         _TMP_VAR=`echo $BRANCH_NAME | sed -r 's,/,-,g'`; \
-        echo ${_NEW_BRANCH_NAME}!; \
-        docker push asia.gcr.io/$PROJECT_ID/$REPO_NAME:${_NEW_BRANCH_NAME}
+        echo ${_NEW_BRANCH_NAME}yyy
 substitutions:
   _NEW_BRANCH_NAME: $_TMP_VAR
