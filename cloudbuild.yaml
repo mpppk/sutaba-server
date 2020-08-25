@@ -53,21 +53,9 @@ steps:
     args:
       - "-c"
       - |-
-        _TMP_VAR=`echo $BRANCH_NAME | sed -r 's,/,-,g'`; \
          docker build \
-         -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
+         -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:${_DOCKER_TAG_NAME} . \
          --cache-from asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
-
-  # Push docker image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    waitFor: ['-']
-    entrypoint: 'bash'
-    args:
-      - "-c"
-      - |-
-        echo ${_NEW_BRANCH_NAME}xxx; \
-        _TMP_VAR=`echo $BRANCH_NAME | sed -r 's,/,-,g'`; \
-        echo ${_NEW_BRANCH_NAME}yyy; \
-        echo `echo $BRANCH_NAME | sed -r 's,/,-,g'`
+         
 substitutions:
-  _NEW_BRANCH_NAME: $_TMP_VAR
+  _DOCKER_TAG_NAME: `echo $BRANCH_NAME | sed -r 's,/,-,g'`
