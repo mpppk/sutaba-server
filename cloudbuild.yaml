@@ -51,8 +51,7 @@ steps:
     waitFor: ['docker-pull']
     entrypoint: 'bash'
     args:
-      - "-c"
-      - |-
-         docker build \
-         -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
-         --cache-from asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
+      - |
+        docker build \
+        -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
+        --cache-from asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
