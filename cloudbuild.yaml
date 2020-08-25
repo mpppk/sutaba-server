@@ -60,6 +60,7 @@ steps:
 
   # Push docker image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
+    waitFor: ['-']
     entrypoint: 'bash'
     args:
       - "-c"
