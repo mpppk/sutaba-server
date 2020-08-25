@@ -58,4 +58,4 @@ steps:
          --cache-from asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
          
 substitutions:
-  _DOCKER_TAG_NAME: `echo $BRANCH_NAME | sed -r 's,/,-,g'`
+  _DOCKER_TAG_NAME: "`echo $BRANCH_NAME | sed -r 's,/,-,g'`"
