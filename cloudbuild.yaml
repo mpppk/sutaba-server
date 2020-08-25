@@ -49,9 +49,11 @@ steps:
   # Build docker image
   - name: 'gcr.io/cloud-builders/docker'
     waitFor: ['docker-pull']
-    entrypoint: 'bash'
+    entrypoint: 'docker'
     args:
-      - |
-        docker build \
-        -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
-        --cache-from asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
+      - build
+      - -t
+      - asia.gcr.io/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'`
+      - .
+      - --cache-from
+      - asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
