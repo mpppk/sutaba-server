@@ -54,8 +54,5 @@ steps:
       - "-c"
       - |-
          docker build \
-         -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:${_DOCKER_TAG_NAME} . \
+         -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
          --cache-from asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
-         
-substitutions:
-  _DOCKER_TAG_NAME: "`echo $BRANCH_NAME | sed -r 's,/,-,g'`"
