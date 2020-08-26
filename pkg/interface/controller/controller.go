@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"strings"
+
 	"github.com/mpppk/sutaba-server/pkg/domain/model"
 	"github.com/mpppk/sutaba-server/pkg/interface/itwitter"
 
@@ -31,7 +33,7 @@ func NewTweetClassificationController(config *TweetClassificationControllerConfi
 
 func (t *TweetClassificationController) Handle(forUserIDStr string, tweets []*itwitter.Tweet) error {
 	for _, tweet := range tweets {
-		if tweet.InReplyToUserID != int64(t.botUser.ID) {
+		if tweet.InReplyToUserID != int64(t.botUser.ID) && !strings.Contains(tweet.Text, "@"+string(t.botUser.Name)) {
 			util.LogPrintfInOneLine("tweet is ignored because it is not sent to subscribe user(%d): receiver(%d)", t.botUser.ID, tweet.InReplyToUserID)
 			continue
 		}
