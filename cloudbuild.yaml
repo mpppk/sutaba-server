@@ -79,8 +79,8 @@ steps:
           gcloud run deploy sutaba-staging-server \
           --region=$_DEPLOY_REGION \
           --image $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:master \
-          --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
-          --platform managed
+          --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID \
+          --platform managed \
           --quiet
         fi
 
