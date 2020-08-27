@@ -59,6 +59,7 @@ steps:
 
   # Push docker image
   - name: gcr.io/cloud-builders/docker
+    id: 'docker-push'
     entrypoint: 'bash'
     args:
       - '-c'
