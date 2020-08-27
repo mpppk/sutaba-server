@@ -48,7 +48,7 @@ steps:
 
   # Build docker image
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'docker-push'
+    id: 'docker-build'
     entrypoint: 'bash'
     args:
       - "-c"
@@ -57,6 +57,17 @@ steps:
         -t $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
         --cache-from $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:master
 
+  # Push docker image
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ $BRANCH_NAME = "master" ]; then
+          docker push $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'`
+        fi
+
+  # Deploy to Cloud Run
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: 'deploy'
     entrypoint: bash
