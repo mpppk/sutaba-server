@@ -44,15 +44,46 @@ steps:
     args:
       - '-c'
       - |
-        docker pull asia.gcr.io/$PROJECT_ID/$REPO_NAME:master || exit 0
+        docker pull $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:master || exit 0
 
   # Build docker image
   - name: 'gcr.io/cloud-builders/docker'
-    waitFor: ['docker-pull']
+    id: 'docker-build'
     entrypoint: 'bash'
     args:
       - "-c"
       - |-
         docker build \
-        -t asia.gcr.io/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
-        --cache-from asia.gcr.io/$PROJECT_ID/$REPO_NAME:master
+        -t $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'` . \
+        --cache-from $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:master
+
+  # Push docker image
+  - name: gcr.io/cloud-builders/docker
+    id: 'docker-push'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ $BRANCH_NAME = "master" ]; then
+          docker push $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:`echo $BRANCH_NAME | sed -r 's,/,-,g'`
+        fi
+
+  # Deploy to Cloud Run
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: 'deploy'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        if [ $BRANCH_NAME = "master" ]; then
+          gcloud run deploy sutaba-staging-server \
+          --region=$_DEPLOY_REGION \
+          --image $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:master \
+          --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
+          --platform managed
+          --quiet
+        fi
+
+substitutions:
+  _GCR_HOSTNAME: asia.gcr.io
+  _DEPLOY_REGION: asia-northeast1
