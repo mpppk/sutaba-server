@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/mpppk/sutaba-server/pkg/util"
+
 	"github.com/mpppk/sutaba-server/pkg/interface/itwitter"
 
 	"github.com/mpppk/sutaba-server/pkg/interface/controller"
@@ -20,8 +22,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/mpppk/sutaba-server/pkg/infra/twitter"
-
-	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/mpppk/sutaba-server/internal/option"
 
@@ -79,7 +79,7 @@ func newStartCmd(fs afero.Fs) (*cobra.Command, error) {
 			}
 
 			e := echo.New()
-			e.Use(middleware.BodyDump(handler.BodyDumpHandler))
+			e.Use(handler.ZapLogger(util.Logger.Desugar()))
 
 			endpoint := "/twitter/aaa"
 			e.GET(endpoint, twitter.GenerateCRCTestHandler(conf.TwitterConsumerSecret))

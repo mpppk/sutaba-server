@@ -35,12 +35,12 @@ func (m *IDMap) LoadOrStore(id int64) (time.Time, bool) {
 func (m *IDMap) StartExpirationCheck() {
 	go func() {
 		for {
-			LogPrintlnInOneLine("expiration checking will be started after ", m.expirationCheckingIntervalSec)
+			Logger.Debugf("expiration checking will be started after ", m.expirationCheckingIntervalSec)
 			select {
 			case <-time.After(m.expirationCheckingIntervalSec):
-				LogPrintlnInOneLine("start expiration checking")
+				Logger.Debugf("start expiration checking")
 				m.checkExpiration()
-				LogPrintlnInOneLine("finish expiration checking")
+				Logger.Debugf("finish expiration checking")
 				continue
 			case <-m.stopExpirationCheckChan:
 				return
@@ -69,7 +69,7 @@ func (m *IDMap) isExpired(t, now time.Time) bool {
 
 func (m *IDMap) deleteIfExpired(id int64, t, now time.Time) bool {
 	if m.isExpired(t, now) {
-		LogPrintlnInOneLine("delete", id)
+		Logger.Debugf("delete %d", id)
 		m.sm.Delete(id)
 		return true
 	}
