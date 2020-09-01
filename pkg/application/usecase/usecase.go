@@ -103,10 +103,10 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 func (p *PredictMessageMediaInteractor) notifyError(toMessage *model.Message, err error) {
 	errTweetText := p.conf.ErrorTweetMessage + fmt.Sprintf(" %v", time.Now())
 	if err := p.messagePresenter.PostText(errTweetText); err != nil {
-		util.LogPrintlnInOneLine("failed to message error notify message", err)
+		util.Logger.Errorw("failed to message error notify message", "error", err)
 	}
 
 	if err := p.messagePresenter.ReplyToMessage(toMessage, p.conf.SorryTweetMessage); err != nil {
-		util.LogPrintlnInOneLine("failed to message error notify message", err)
+		util.Logger.Errorw("failed to message error notify message", "error", err)
 	}
 }
