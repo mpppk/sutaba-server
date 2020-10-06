@@ -21,7 +21,6 @@ type PredictMessageMediaUseCase interface {
 
 type PredictMessageMediaInteractorConfig struct {
 	BotUser           model.User
-	TargetKeyword     string
 	ErrorTweetMessage string
 	SorryTweetMessage string
 	MessagePresenter  ipresenter.MessagePresenter
@@ -44,46 +43,28 @@ func NewPredictMessageMediaInteractor(conf *PredictMessageMediaInteractorConfig)
 
 func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *model.Message) (string, error) {
 	if forUserIDStr != p.conf.BotUser.GetIDStr() { // FIXME: this is business logic
-		return "message is ignored because event is not for bot", nil
+		msg := fmt.Sprintf("message is ignored because event is not for bot(id: %s) forUserID: %s", p.conf.BotUser.GetIDStr(), forUserIDStr)
+		return msg, nil
 	}
 
-	if reason := domain.IsTargetMessage(&p.conf.BotUser, message, p.conf.TargetKeyword); reason == "" {
-		f := func() error {
-			classifyResult, err := p.classifierService.Classify(message)
-			if err != nil {
-				return xerrors.Errorf("failed to classifyResult: %v", err)
-			}
-			return p.messagePresenter.ReplyResultToMessageWithReference(
-				message,
-				message,
-				classifyResult,
-				message.IsDebugMode(),
-			)
-		}
-		err := f()
-		if err != nil {
-			p.notifyError(message, err)
-			return "", xerrors.Errorf("error occurred in Handle: %w", err)
-		}
-		return "", nil
-	} else if !message.HasMessageReference() {
+	var referredMsg *model.Message = nil
+	if msgIsTarget, refMsgIsTarget, reason := domain.IsTargetMessage(&p.conf.BotUser, message); msgIsTarget {
+		referredMsg = message
+	} else if refMsgIsTarget {
+		referredMsg = message.ReferencedMessage
+	} else {
 		return reason, nil
 	}
 
-	// Check quote message
-	if reason := domain.IsTargetMessage(&p.conf.BotUser, message.ReferencedMessage, p.conf.TargetKeyword); reason != "" {
-		return "quoted tweet: " + reason, nil
-	}
-
 	f := func() error {
-		classifyResult, err := p.classifierService.Classify(message.ReferencedMessage)
+		classifyResult, err := p.classifierService.Classify(referredMsg)
 		if err != nil {
 			return xerrors.Errorf("failed to classifyResult: %v", err)
 		}
 
 		if err := p.messagePresenter.ReplyResultToMessageWithReference(
 			message,
-			message.ReferencedMessage,
+			referredMsg,
 			classifyResult,
 			message.IsDebugMode(),
 		); err != nil {
