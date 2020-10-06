@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -27,8 +31,22 @@ var tweetIDMap = util.NewIDMap(60*5, 60*10)
 func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			err := next(c)
-			if err != nil {
+			// read req / res body
+			// https://github.com/labstack/echo/blob/master/middleware/body_dump.go#L68-L79
+			// Request
+			reqBody := []byte{}
+			if c.Request().Body != nil { // Read
+				reqBody, _ = ioutil.ReadAll(c.Request().Body)
+			}
+			c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqBody)) // Reset
+
+			// Response
+			resBody := new(bytes.Buffer)
+			mw := io.MultiWriter(c.Response().Writer, resBody)
+			writer := &bodyDumpResponseWriter{Writer: mw, ResponseWriter: c.Response().Writer}
+			c.Response().Writer = writer
+
+			if err := next(c); err != nil {
 				c.Error(err)
 			}
 
@@ -38,16 +56,22 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 			var res http.Response
 			res.StatusCode = echoRes.Status
 
+			reqRaw := json.RawMessage(reqBody)
+			resRaw := json.RawMessage(resBody.Bytes())
+			reqField := zap.Any("req", &reqRaw)
+			resField := zap.Any("res", &resRaw)
+			httpField := zapdriver.HTTP(zapdriver.NewHTTP(req, &res))
+
 			n := res.StatusCode
 			switch {
 			case n >= 500:
-				log.Error("Server error", zapdriver.HTTP(zapdriver.NewHTTP(req, &res)))
+				log.Error("Server error", httpField, reqField, resField)
 			case n >= 400:
-				log.Warn("Client error", zapdriver.HTTP(zapdriver.NewHTTP(req, &res)))
+				log.Warn("Client error", httpField, reqField, resField)
 			case n >= 300:
-				log.Info("Redirection", zapdriver.HTTP(zapdriver.NewHTTP(req, &res)))
+				log.Info("Redirection", httpField, reqField, resField)
 			default:
-				log.Info("Success", zapdriver.HTTP(zapdriver.NewHTTP(req, &res)))
+				log.Info("Success", httpField, reqField, resField)
 			}
 
 			return nil
