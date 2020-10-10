@@ -31,6 +31,7 @@ type Message struct {
 	Text              MessageText
 	ReferencedMessage *Message
 	MediaNum          int
+	ReplyUserID       UserID
 }
 
 func (m *Message) GetIDStr() string {
@@ -43,6 +44,10 @@ func (m *Message) HasMessageReference() bool {
 
 func (m *Message) HasKeyWord(keyword string) bool {
 	return m.Text.HasKeyword(keyword)
+}
+
+func (m *Message) IsRepliedTo(user *User) bool {
+	return m.ReplyUserID == user.ID || strings.Contains(string(m.Text), "@"+string(user.Name))
 }
 
 func (m *Message) IsDebugMode() bool {

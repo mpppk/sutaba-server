@@ -24,6 +24,11 @@ func IsTargetMessage(botUser *model.User, message *model.Message) (bool, bool, s
 		return false, false, "message is ignored because it is sent by bot"
 	}
 
+	if !message.IsRepliedTo(botUser) {
+		reason := fmt.Sprintf("tweet is ignored because it is not sent to subscribe user(%d): receiver(%d)", botUser.ID, message.ReplyUserID)
+		return false, false, reason
+	}
+
 	if message.ReferencedMessage != nil && botUser.IsOwnMessage(message.ReferencedMessage) {
 		return false, false, "message is ignored because it refer bot message"
 	}

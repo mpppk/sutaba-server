@@ -27,7 +27,8 @@ func TestIsTargetMessage(t *testing.T) {
 					User: model.User{
 						ID: 2,
 					},
-					MediaNum: 1,
+					ReplyUserID: 1,
+					MediaNum:    1,
 				},
 			},
 			msgIsTarget:    true,
@@ -43,7 +44,8 @@ func TestIsTargetMessage(t *testing.T) {
 					User: model.User{
 						ID: 2,
 					},
-					MediaNum: 0,
+					ReplyUserID: 1,
+					MediaNum:    0,
 					ReferencedMessage: &model.Message{
 						User: model.User{
 							ID: 3,
@@ -54,6 +56,25 @@ func TestIsTargetMessage(t *testing.T) {
 			},
 			msgIsTarget:    false,
 			refMsgIsTarget: true,
+		},
+		{
+			name: "ReplyUserIDが異なっていても、Textにusernameが含まれていれば対象",
+			args: args{
+				botUser: &model.User{
+					ID:   1,
+					Name: "username",
+				},
+				message: &model.Message{
+					User: model.User{
+						ID: 2,
+					},
+					MediaNum:    1,
+					ReplyUserID: 2,
+					Text:        "@username text",
+				},
+			},
+			msgIsTarget:    true,
+			refMsgIsTarget: false,
 		},
 		{
 			name: "メディアが付与されたメッセージでなければ対象外",
@@ -75,7 +96,8 @@ func TestIsTargetMessage(t *testing.T) {
 					User: model.User{
 						ID: 1,
 					},
-					MediaNum: 1,
+					ReplyUserID: 1,
+					MediaNum:    1,
 				},
 			},
 			msgIsTarget:    false,
@@ -91,7 +113,8 @@ func TestIsTargetMessage(t *testing.T) {
 					User: model.User{
 						ID: 2,
 					},
-					MediaNum: 1,
+					MediaNum:    1,
+					ReplyUserID: 1,
 					ReferencedMessage: &model.Message{
 						User: model.User{
 							ID: 1,
@@ -113,13 +136,31 @@ func TestIsTargetMessage(t *testing.T) {
 					User: model.User{
 						ID: 1,
 					},
-					MediaNum: 1,
+					MediaNum:    1,
+					ReplyUserID: 1,
 					ReferencedMessage: &model.Message{
 						User: model.User{
 							ID: 2,
 						},
 						MediaNum: 1,
 					},
+				},
+			},
+			msgIsTarget:    false,
+			refMsgIsTarget: false,
+		},
+		{
+			name: "対象ユーザへのリプライでなければ対象外",
+			args: args{
+				botUser: &model.User{
+					ID: 1,
+				},
+				message: &model.Message{
+					User: model.User{
+						ID: 2,
+					},
+					MediaNum:    1,
+					ReplyUserID: 2,
 				},
 			},
 			msgIsTarget:    false,
