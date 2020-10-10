@@ -15,6 +15,7 @@ type Tweet struct {
 	InReplyToUserID     int64
 	InReplyToScreenName string
 	MediaURLs           []string
+	RetweetedStatus     *Tweet
 }
 
 func (t *Tweet) GetIDStr() string {

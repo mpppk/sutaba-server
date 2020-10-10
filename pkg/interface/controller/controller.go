@@ -31,14 +31,16 @@ func NewTweetClassificationController(config *TweetClassificationControllerConfi
 	}
 }
 
-func (t *TweetClassificationController) Handle(forUserIDStr string, tweets []*itwitter.Tweet) error {
+func (t *TweetClassificationController) Handle(forUserID model.UserID, tweets []*itwitter.Tweet) error {
 	for _, tweet := range tweets {
+		// FIXME: move to IsTargetMessage
 		if tweet.InReplyToUserID != int64(t.botUser.ID) && !strings.Contains(tweet.Text, "@"+string(t.botUser.Name)) {
 			util.LogPrintfInOneLine("tweet is ignored because it is not sent to subscribe user(%d): receiver(%d)", t.botUser.ID, tweet.InReplyToUserID)
 			continue
 		}
-		message := t.twitter.NewMessage(tweet)
-		ignoreReason, err := t.predictTweetMediaUseCase.Handle(forUserIDStr, message)
+
+		messageEvent := t.twitter.NewMessageEvent(forUserID, tweet)
+		ignoreReason, err := t.predictTweetMediaUseCase.Handle(messageEvent)
 		if err != nil {
 			util.LogPrintfInOneLine("error occurred while tweet media predicting: %v", err)
 			return err

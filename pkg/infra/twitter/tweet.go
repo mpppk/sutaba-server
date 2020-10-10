@@ -6,6 +6,9 @@ import (
 )
 
 func ToTweet(anacondaTweet *anaconda.Tweet) *itwitter.Tweet {
+	if anacondaTweet == nil {
+		return nil
+	}
 	mediaList := getMediaList(anacondaTweet)
 	var mediaURLs []string
 	for _, media := range mediaList {
@@ -20,6 +23,7 @@ func ToTweet(anacondaTweet *anaconda.Tweet) *itwitter.Tweet {
 		InReplyToUserID:     anacondaTweet.InReplyToUserID,
 		InReplyToStatusID:   anacondaTweet.InReplyToStatusID,
 		InReplyToScreenName: anacondaTweet.InReplyToScreenName,
+		RetweetedStatus:     ToTweet(anacondaTweet.RetweetedStatus),
 	}
 
 	if anacondaTweet.InReplyToStatusID != 0 {

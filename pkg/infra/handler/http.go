@@ -7,6 +7,9 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
 
 	"go.uber.org/zap"
 
@@ -108,7 +111,12 @@ func GeneratePredictHandler(conf *PredictHandlerConfig) func(c echo.Context) err
 			}
 		}
 
-		if err := conf.TweetClassificationController.Handle(events.ForUserId, tweets); err != nil {
+		userId, err := strconv.Atoi(events.ForUserId)
+		if err != nil {
+			return fmt.Errorf("failed to convert user id from string to int: %s: %w", events.ForUserId, err)
+		}
+
+		if err := conf.TweetClassificationController.Handle(model.UserID(userId), tweets); err != nil {
 			return c.String(http.StatusInternalServerError, fmt.Sprintf(`{"error": "%s"}`, err))
 		}
 		return c.NoContent(http.StatusNoContent)
