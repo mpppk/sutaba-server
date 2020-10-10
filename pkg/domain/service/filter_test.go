@@ -8,7 +8,7 @@ import (
 
 func TestIsTargetMessage(t *testing.T) {
 	type args struct {
-		user    *model.User
+		botUser *model.User
 		message *model.Message
 	}
 	tests := []struct {
@@ -20,7 +20,7 @@ func TestIsTargetMessage(t *testing.T) {
 		{
 			name: "自分自身でない、Mediaを含むメッセージは対象",
 			args: args{
-				user: &model.User{
+				botUser: &model.User{
 					ID: 1,
 				},
 				message: &model.Message{
@@ -36,7 +36,7 @@ func TestIsTargetMessage(t *testing.T) {
 		{
 			name: "自分自身でない、Mediaを含むメッセージをreferしたメッセージは対象",
 			args: args{
-				user: &model.User{
+				botUser: &model.User{
 					ID: 1,
 				},
 				message: &model.Message{
@@ -58,7 +58,7 @@ func TestIsTargetMessage(t *testing.T) {
 		{
 			name: "メディアが付与されたメッセージでなければ対象外",
 			args: args{
-				user: &model.User{},
+				botUser: &model.User{},
 				message: &model.Message{
 					MediaNum: 0,
 				},
@@ -68,7 +68,7 @@ func TestIsTargetMessage(t *testing.T) {
 		{
 			name: "自分自身のメッセージは対象外",
 			args: args{
-				user: &model.User{
+				botUser: &model.User{
 					ID: 1,
 				},
 				message: &model.Message{
@@ -84,7 +84,7 @@ func TestIsTargetMessage(t *testing.T) {
 		{
 			name: "自分自身のメッセージをreferしているメッセージは対象外",
 			args: args{
-				user: &model.User{
+				botUser: &model.User{
 					ID: 1,
 				},
 				message: &model.Message{
@@ -106,7 +106,7 @@ func TestIsTargetMessage(t *testing.T) {
 		{
 			name: "referしているメッセージが対象でも、元が自分自身のメッセージであれば対象外",
 			args: args{
-				user: &model.User{
+				botUser: &model.User{
 					ID: 1,
 				},
 				message: &model.Message{
@@ -128,7 +128,70 @@ func TestIsTargetMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msgIsTarget, refMsgIsTarget, reason := IsTargetMessage(tt.args.user, tt.args.message)
+			msgIsTarget, refMsgIsTarget, reason := IsTargetMessage(tt.args.botUser, tt.args.message)
+			if msgIsTarget != tt.msgIsTarget {
+				t.Errorf("IsTargetMessage() = %v %v, msgIsTarget %v, reason %s", msgIsTarget, refMsgIsTarget, tt.msgIsTarget, reason)
+			}
+			if refMsgIsTarget != tt.refMsgIsTarget {
+				t.Errorf("IsTargetMessage() = %v %v, refMsgIsTarget %v, reason %s", msgIsTarget, refMsgIsTarget, tt.refMsgIsTarget, reason)
+			}
+		})
+	}
+}
+
+func TestIsTargetMessageEvent(t *testing.T) {
+	type args struct {
+		botUser      *model.User
+		messageEvent *model.MessageEvent
+	}
+	tests := []struct {
+		name           string
+		args           args
+		msgIsTarget    bool
+		refMsgIsTarget bool
+	}{
+		{
+			name: "イベントの対象ユーザがbotでは無かった場合は対象外",
+			args: args{
+				botUser: &model.User{
+					ID: 1,
+				},
+				messageEvent: &model.MessageEvent{
+					TargetUserID: 2,
+					Message: &model.Message{
+						User: model.User{
+							ID: 2,
+						},
+						MediaNum: 1,
+					},
+				},
+			},
+			msgIsTarget:    false,
+			refMsgIsTarget: false,
+		},
+		{
+			name: "イベントがShare(twitterの場合はretweet)だった場合は対象外",
+			args: args{
+				botUser: &model.User{
+					ID: 1,
+				},
+				messageEvent: &model.MessageEvent{
+					TargetUserID: 3,
+					Message: &model.Message{
+						User: model.User{
+							ID: 2,
+						},
+						MediaNum: 1,
+					},
+				},
+			},
+			msgIsTarget:    false,
+			refMsgIsTarget: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msgIsTarget, refMsgIsTarget, reason := IsTargetMessageEvent(tt.args.botUser, tt.args.messageEvent)
 			if msgIsTarget != tt.msgIsTarget {
 				t.Errorf("IsTargetMessage() = %v %v, msgIsTarget %v, reason %s", msgIsTarget, refMsgIsTarget, tt.msgIsTarget, reason)
 			}

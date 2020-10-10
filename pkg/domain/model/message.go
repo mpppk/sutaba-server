@@ -19,6 +19,12 @@ func (m MessageText) HasKeyword(keyword string) bool {
 	return strings.Contains(string(m), keyword)
 }
 
+type MessageEvent struct {
+	TargetUserID UserID
+	IsShared     bool
+	Message      *Message
+}
+
 type Message struct {
 	ID                MessageID
 	User              User

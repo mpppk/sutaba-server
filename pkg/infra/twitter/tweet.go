@@ -20,6 +20,7 @@ func ToTweet(anacondaTweet *anaconda.Tweet) *itwitter.Tweet {
 		InReplyToUserID:     anacondaTweet.InReplyToUserID,
 		InReplyToStatusID:   anacondaTweet.InReplyToStatusID,
 		InReplyToScreenName: anacondaTweet.InReplyToScreenName,
+		RetweetedStatus:     ToTweet(anacondaTweet.RetweetedStatus),
 	}
 
 	if anacondaTweet.InReplyToStatusID != 0 {

@@ -16,7 +16,7 @@ import (
 )
 
 type PredictMessageMediaUseCase interface {
-	Handle(forUserIDStr string, message *model.Message) (string, error)
+	Handle(messageEvent *model.MessageEvent) (string, error)
 }
 
 type PredictMessageMediaInteractorConfig struct {
@@ -41,17 +41,12 @@ func NewPredictMessageMediaInteractor(conf *PredictMessageMediaInteractorConfig)
 	}
 }
 
-func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *model.Message) (string, error) {
-	if forUserIDStr != p.conf.BotUser.GetIDStr() { // FIXME: this is business logic
-		msg := fmt.Sprintf("message is ignored because event is not for bot(id: %s) forUserID: %s", p.conf.BotUser.GetIDStr(), forUserIDStr)
-		return msg, nil
-	}
-
+func (p *PredictMessageMediaInteractor) Handle(messageEvent *model.MessageEvent) (string, error) {
 	var referredMsg *model.Message = nil
-	if msgIsTarget, refMsgIsTarget, reason := domain.IsTargetMessage(&p.conf.BotUser, message); msgIsTarget {
-		referredMsg = message
+	if msgIsTarget, refMsgIsTarget, reason := domain.IsTargetMessageEvent(&p.conf.BotUser, messageEvent); msgIsTarget {
+		referredMsg = messageEvent.Message
 	} else if refMsgIsTarget {
-		referredMsg = message.ReferencedMessage
+		referredMsg = messageEvent.Message.ReferencedMessage
 	} else {
 		return reason, nil
 	}
@@ -63,19 +58,19 @@ func (p *PredictMessageMediaInteractor) Handle(forUserIDStr string, message *mod
 		}
 
 		if err := p.messagePresenter.ReplyResultToMessageWithReference(
-			message,
+			messageEvent.Message,
 			referredMsg,
 			classifyResult,
-			message.IsDebugMode(),
+			messageEvent.Message.IsDebugMode(),
 		); err != nil {
-			return xerrors.Errorf("failed to post message: %v", err)
+			return xerrors.Errorf("failed to post messageEvent: %v", err)
 		}
 
 		return nil
 	}
 	err := f()
 	if err != nil {
-		p.notifyError(message, err)
+		p.notifyError(messageEvent.Message, err)
 		return "", xerrors.Errorf("error occurred in JudgeAndPostPredictTweetUseCase: %w", err)
 	}
 	return "", nil

@@ -1,14 +1,30 @@
 package domain
 
-import "github.com/mpppk/sutaba-server/pkg/domain/model"
+import (
+	"fmt"
+
+	"github.com/mpppk/sutaba-server/pkg/domain/model"
+)
+
+// IsTargetMessageEvent checks if the given message event is a target.
+func IsTargetMessageEvent(botUser *model.User, messageEvent *model.MessageEvent) (bool, bool, string) {
+	if messageEvent.TargetUserID != botUser.ID {
+		msg := fmt.Sprintf("messageEvent is ignored because event is not for bot(id: %d) forUserID: %d", botUser.ID, messageEvent.TargetUserID)
+		return false, false, msg
+	}
+	if messageEvent.IsShared {
+		return false, false, "message event is ignored because it is shared event"
+	}
+	return IsTargetMessage(botUser, messageEvent.Message)
+}
 
 // IsTargetMessage checks if the given message is a target.
-func IsTargetMessage(user *model.User, message *model.Message) (bool, bool, string) {
-	if user.IsOwnMessage(message) {
+func IsTargetMessage(botUser *model.User, message *model.Message) (bool, bool, string) {
+	if botUser.IsOwnMessage(message) {
 		return false, false, "message is ignored because it is sent by bot"
 	}
 
-	if message.ReferencedMessage != nil && user.IsOwnMessage(message.ReferencedMessage) {
+	if message.ReferencedMessage != nil && botUser.IsOwnMessage(message.ReferencedMessage) {
 		return false, false, "message is ignored because it refer bot message"
 	}
 
