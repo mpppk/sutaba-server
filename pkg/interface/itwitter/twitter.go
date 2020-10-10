@@ -32,10 +32,11 @@ func (r *Twitter) NewMessageEvent(forUserID model.UserID, tweet *Tweet) *model.M
 
 func (r *Twitter) NewMessage(tweet *Tweet) *model.Message {
 	message := &model.Message{
-		ID:       model.MessageID(tweet.ID),
-		User:     tweet.User,
-		Text:     model.MessageText(tweet.Text),
-		MediaNum: len(tweet.MediaURLs),
+		ID:          model.MessageID(tweet.ID),
+		User:        tweet.User,
+		Text:        model.MessageText(tweet.Text),
+		MediaNum:    len(tweet.MediaURLs),
+		ReplyUserID: model.UserID(tweet.InReplyToUserID),
 	}
 
 	if tweet.QuoteTweet != nil {
