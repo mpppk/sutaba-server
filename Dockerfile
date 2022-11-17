@@ -10,7 +10,7 @@ COPY . /src
 WORKDIR /src
 RUN make build
 
-FROM alpine:3.16
+FROM alpine:3.17
 RUN mkdir /lib64
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 RUN ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
