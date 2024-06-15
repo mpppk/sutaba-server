@@ -11,10 +11,10 @@ require (
 	github.com/mpppk/anacondaaaa v0.0.1
 	github.com/mpppk/messagen v0.0.2
 	github.com/rhysd/go-github-selfupdate v1.2.3
-	github.com/spf13/afero v1.8.2
+	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.13.0
+	github.com/spf13/viper v1.19.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028
 )
